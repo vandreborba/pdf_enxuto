@@ -1,11 +1,11 @@
 #!/bin/bash
-# Release unificado: bump de versão, build Linux (.deb), build Windows (GitHub) e publicação.
+# Release unificado: bump de versão, build desktop (Windows ZIP + Linux AppImage) e publicação.
 #
 # Uso:
 #   bash .sh/release.sh              # patch automático ou versão digitada
 #   bash .sh/release.sh 1.1.0        # versão manual (build number +1)
 #
-# Requisitos: Flutter, gh autenticado (gh auth login) e dpkg-deb.
+# Requisitos: Flutter, gh autenticado (gh auth login).
 
 set -e
 
@@ -117,9 +117,9 @@ echo ""
 # ---------------------------------------------------------------------------
 echo -e "${YELLOW}=== Commit e push ===${NC}"
 
-git reset HEAD -- release/*.deb release/windows/*.zip 2>/dev/null || true
+git reset HEAD -- release/*.deb release/*.AppImage release/windows/*.zip 2>/dev/null || true
 git add -A
-git reset HEAD -- release/*.deb release/windows/*.zip 2>/dev/null || true
+git reset HEAD -- release/*.deb release/*.AppImage release/windows/*.zip 2>/dev/null || true
 
 if git diff --cached --quiet; then
     echo -e "${YELLOW}Nenhuma alteração de código para commitar (apenas versão).${NC}"
@@ -139,34 +139,27 @@ echo -e "${GREEN}✓ Push concluído${NC}"
 echo ""
 
 # ---------------------------------------------------------------------------
-# Build Linux (.deb)
+# Build desktop (Windows ZIP + Linux AppImage via GitHub Actions)
 # ---------------------------------------------------------------------------
-echo -e "${YELLOW}=== Build Linux (.deb) ===${NC}"
-SKIP_OPEN_FOLDER=1 bash "$SCRIPT_DIR/.sh/build-deb.sh"
-echo ""
-
-# ---------------------------------------------------------------------------
-# Build Windows (GitHub Actions)
-# ---------------------------------------------------------------------------
-echo -e "${YELLOW}=== Build Windows (GitHub Actions) ===${NC}"
-bash "$SCRIPT_DIR/.sh/build-windows.sh" --no-prompt
+echo -e "${YELLOW}=== Build desktop (Windows + AppImage) ===${NC}"
+bash "$SCRIPT_DIR/.sh/build-desktop.sh" --no-prompt
 echo ""
 
 # ---------------------------------------------------------------------------
 # Validar artefatos
 # ---------------------------------------------------------------------------
-DEB_FILE="$SCRIPT_DIR/release/${APP_NAME}_${NEW_SEMVER}_amd64.deb"
+APPIMAGE_FILE="$SCRIPT_DIR/release/${APP_NAME}_${NEW_SEMVER}_x86_64.AppImage"
 ZIP_FILE="$SCRIPT_DIR/release/windows/${APP_NAME}_windows_${NEW_SEMVER}.zip"
 TAG="v${NEW_SEMVER}"
 
 echo -e "${YELLOW}=== Validando artefatos ===${NC}"
 
 MISSING=0
-if [[ ! -f "$DEB_FILE" ]]; then
-    echo -e "${RED}✗ .deb não encontrado: $DEB_FILE${NC}"
+if [[ ! -f "$APPIMAGE_FILE" ]]; then
+    echo -e "${RED}✗ AppImage não encontrado: $APPIMAGE_FILE${NC}"
     MISSING=1
 else
-    echo -e "${GREEN}✓ $(basename "$DEB_FILE")${NC}"
+    echo -e "${GREEN}✓ $(basename "$APPIMAGE_FILE")${NC}"
 fi
 
 if [[ ! -f "$ZIP_FILE" ]]; then
@@ -199,10 +192,13 @@ else
 
 Compressor e divisor de PDF **100% local**: nada sai do seu computador.
 
-### Linux
+### Linux (AppImage)
+
+Baixe o AppImage, dê permissão de execução e rode — não precisa instalar:
 
 \`\`\`bash
-sudo dpkg -i ${APP_NAME}_${NEW_SEMVER}_amd64.deb
+chmod +x ${APP_NAME}_${NEW_SEMVER}_x86_64.AppImage
+./${APP_NAME}_${NEW_SEMVER}_x86_64.AppImage
 \`\`\`
 
 ### Windows
@@ -232,7 +228,7 @@ gh release create "$TAG" \
     --repo "$GITHUB_REPO" \
     --title "PDF Enxuto $TAG" \
     --notes-file "$NOTES_FILE" \
-    "$DEB_FILE" \
+    "$APPIMAGE_FILE" \
     "$ZIP_FILE"
 
 rm -f "$NOTES_FILE"

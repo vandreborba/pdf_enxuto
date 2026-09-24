@@ -11,6 +11,8 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+./kilo
+
 
 # IntelliJ related
 *.iml
@@ -46,4 +48,5 @@ app.*.map.json
 
 # Release binaries (generated locally by .sh/release.sh)
 release/*.deb
+release/*.AppImage
 release/windows/*.zip

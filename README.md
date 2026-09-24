@@ -34,8 +34,14 @@ sudo apt install ghostscript qpdf
 
 ## Instalação
 
-- **Linux:** baixe o `.deb` em [Releases](https://github.com/vandreborba/pdf_enxuto/releases/latest)
-  e instale com `sudo dpkg -i pdf-enxuto_*.deb`.
+- **Linux:** baixe o AppImage em [Releases](https://github.com/vandreborba/pdf_enxuto/releases/latest),
+  dê permissão de execução e rode — não precisa instalar:
+
+  ```bash
+  chmod +x pdf-enxuto_*.AppImage
+  ./pdf-enxuto_*.AppImage
+  ```
+
 - **Windows:** baixe o ZIP, extraia e execute `pdf_enxuto.exe`.
 
 ## Desenvolvimento
@@ -44,7 +50,8 @@ sudo apt install ghostscript qpdf
 flutter pub get
 flutter run -d linux      # ou -d windows
 flutter test              # 43 testes
-bash .sh/release.sh       # bump + testes + .deb + Windows + release
+bash .sh/build-desktop.sh   # Windows ZIP + Linux AppImage (GitHub Actions)
+bash .sh/release.sh         # bump + testes + Windows + AppImage + release
 ```
 
 Cores de destaque (troca em Configurações → Aparência):

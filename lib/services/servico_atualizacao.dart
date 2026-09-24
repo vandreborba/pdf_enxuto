@@ -90,7 +90,7 @@ class ServicoAtualizacao {
       String? nomeArquivo;
       int? tamanho;
 
-      final desejado = Sistema.ehWindows ? '.zip' : '.deb';
+      final desejado = Sistema.ehWindows ? '.zip' : '.appimage';
       for (final ativo in ativos) {
         if (ativo is! Map) continue;
         final nome = ativo['name'] as String? ?? '';
