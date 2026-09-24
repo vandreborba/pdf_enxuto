@@ -1,0 +1,63 @@
+# Compila o app Flutter para Windows e gera um ZIP portátil.
+# Disparo manual: GitHub → Actions → "Build Windows" → Run workflow
+# Ou via script local: bash .sh/build-windows.sh
+
+name: Build Windows
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Verify environment
+        run: flutter doctor -v
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test --exclude-tags golden
+
+      - name: Build Windows (Release)
+        run: flutter build windows --release
+
+      - name: Create ZIP package
+        id: package
+        shell: pwsh
+        run: |
+          $releaseDir = "build\windows\x64\runner\Release"
+          if (-not (Test-Path $releaseDir)) {
+            Write-Error "Release folder not found: $releaseDir"
+            exit 1
+          }
+
+          $versionLine = Select-String -Path pubspec.yaml -Pattern '^version:\s*(\S+)' | Select-Object -First 1
+          $fullVersion = if ($versionLine) { $versionLine.Matches[0].Groups[1].Value } else { "dev" }
+          $version = if ($fullVersion -match '^([^+]+)') { $Matches[1] } else { $fullVersion }
+          $zipName = "pdf-enxuto_windows_${version}.zip"
+
+          if (Test-Path $zipName) { Remove-Item $zipName -Force }
+          Compress-Archive -Path "$releaseDir\*" -DestinationPath $zipName -CompressionLevel Optimal
+
+          Write-Host "ZIP created: $zipName"
+          "zip_name=$zipName" >> $env:GITHUB_OUTPUT
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-enxuto-windows
+          path: ${{ steps.package.outputs.zip_name }}
+          retention-days: 30

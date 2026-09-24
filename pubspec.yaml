@@ -1,0 +1,75 @@
+name: pdf_enxuto
+description: "Compressor e divisor de PDF 100% local: reduza o tamanho dos seus arquivos ou corte o PDF em várias partes, sem enviar nada para a internet."
+homepage: https://github.com/vandreborba/pdf_enxuto
+repository: https://github.com/vandreborba/pdf_enxuto
+issue_tracker: https://github.com/vandreborba/pdf_enxuto/issues
+publish_to: 'none'
+
+# Versão do aplicativo. Também usada pelos scripts .sh e pelo auto-update.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+# Plataformas suportadas
+platforms:
+  linux:
+  windows:
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  intl: ^0.20.2
+
+  # Janela (barra de título própria, tamanho mínimo, ícone)
+  window_manager: ^0.5.2
+
+  # Seleção de arquivos e pastas
+  file_picker: ^13.1.0
+  file_selector: ^1.1.0
+  desktop_drop: ^0.8.4
+
+  # Caminhos, preferências e informações do pacote
+  path_provider: ^2.1.6
+  shared_preferences: ^2.5.5
+  package_info_plus: ^10.2.1
+
+  # Auto-update e links externos
+  http: ^1.6.0
+  url_launcher: ^6.3.2
+
+  # Motor nativo: rasterização de páginas (pdfium embutido)
+  # Fixado: 2.5+ exige Flutter >= 3.47 e 2.6+ exige Dart >= 3.13.
+  pdfrx: 2.4.8
+
+  # Codificação de imagens e montagem do PDF rasterizado
+  image: ^4.10.1
+  pdf: ^3.13.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icons/
+    - assets/branding/
+
+flutter_launcher_icons:
+  image_path: "assets/icons/icon.png"
+  android: false
+  ios: false
+  windows:
+    generate: true
+    image_path: "assets/icons/icon.png"
+    icon_size: 256
+  macos:
+    generate: false
