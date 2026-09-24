@@ -139,9 +139,9 @@ echo -e "${GREEN}✓ Push concluído${NC}"
 echo ""
 
 # ---------------------------------------------------------------------------
-# Build desktop (Windows ZIP + Linux AppImage via GitHub Actions)
+# Build desktop (AppImage local + Windows ZIP via GitHub Actions)
 # ---------------------------------------------------------------------------
-echo -e "${YELLOW}=== Build desktop (Windows + AppImage) ===${NC}"
+echo -e "${YELLOW}=== Build desktop (Linux AppImage + Windows ZIP) ===${NC}"
 bash "$SCRIPT_DIR/.sh/build-desktop.sh" --no-prompt
 echo ""
 
@@ -191,6 +191,21 @@ else
 ## PDF Enxuto $TAG
 
 Compressor e divisor de PDF **100% local**: nada sai do seu computador.
+Sem conta, sem nuvem, sem anúncios.
+
+### O que faz
+
+- **Comprimir** por perfil de qualidade (Leve, Equilibrado, Forte, Extremo)
+  ou por **tamanho alvo** ("até 5 MB", por arquivo ou somando todos).
+- **Manter o texto selecionável** ou **virar imagem** (máxima redução).
+- **Dividir** por intervalos (\`1-3, 7, 10-12\`), a cada N páginas, por
+  tamanho máximo, páginas escolhidas ou pelos marcadores do documento.
+- Vários arquivos de uma vez, com progresso por arquivo, cancelar e
+  histórico do quanto você já economizou.
+- Arraste PDFs para a janela ou use \`Ctrl+O\`.
+
+Funciona **sem instalar nada**: o motor próprio (pdfium + leitor/escritor
+de PDF em Dart) já vem junto.
 
 ### Linux (AppImage)
 
@@ -207,8 +222,7 @@ Baixe o ZIP, extraia e execute \`pdf_enxuto.exe\`.
 
 ### Motores opcionais (resultados ainda melhores)
 
-O app já funciona sem instalar nada (motor próprio embutido). Se quiser
-resultados ainda melhores, instale o Ghostscript e o qpdf:
+Se quiser resultados ainda melhores, instale o Ghostscript e o qpdf:
 
 \`\`\`bash
 sudo apt install ghostscript qpdf

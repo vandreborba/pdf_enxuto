@@ -50,8 +50,8 @@ sudo apt install ghostscript qpdf
 flutter pub get
 flutter run -d linux      # ou -d windows
 flutter test              # 43 testes
-bash .sh/build-desktop.sh   # Windows ZIP + Linux AppImage (GitHub Actions)
-bash .sh/release.sh         # bump + testes + Windows + AppImage + release
+bash .sh/build-desktop.sh   # AppImage local + Windows ZIP (GitHub Actions)
+bash .sh/release.sh         # bump + testes + AppImage + Windows + release
 ```
 
 Cores de destaque (troca em Configurações → Aparência):

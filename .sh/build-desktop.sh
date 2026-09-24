@@ -1,13 +1,14 @@
 #!/bin/bash
-# Dispara o build desktop no GitHub Actions (Windows ZIP + Linux AppImage)
-# e baixa os dois pacotes.
+# Build desktop do PDF Enxuto:
+#   1. AppImage do Linux, compilado nesta máquina (não precisa instalar).
+#   2. ZIP do Windows, compilado no GitHub Actions (não roda no Linux).
 #
 # Uso:
 #   bash .sh/build-desktop.sh
 #   bash .sh/build-desktop.sh --no-prompt   # sem avisos de git (usado pelo release.sh)
 #
-# Requisitos: gh autenticado (gh auth login) e o workflow já enviado ao GitHub.
-# O build Windows/AppImage não roda localmente — usa os runners do GitHub.
+# Requisitos: Flutter, gh autenticado (gh auth login) e o workflow já enviado
+# ao GitHub. Na primeira vez o AppImage baixa o appimagetool (~5 MB).
 
 set -e
 
@@ -42,7 +43,7 @@ NC='\033[0m'
 echo ""
 echo -e "${BLUE}=========================================${NC}"
 echo -e "${BLUE}   PDF Enxuto - Build Desktop${NC}"
-echo -e "${BLUE}   (Windows ZIP + Linux AppImage)${NC}"
+echo -e "${BLUE}   (Linux AppImage + Windows ZIP)${NC}"
 echo -e "${BLUE}=========================================${NC}"
 echo ""
 
@@ -50,7 +51,7 @@ if [[ "$NO_PROMPT" -eq 0 ]]; then
     echo -e "${YELLOW}╔══════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${YELLOW}║  AVISO: faça commit e push antes de compilar!                    ║${NC}"
     echo -e "${YELLOW}║                                                                  ║${NC}"
-    echo -e "${YELLOW}║  O build roda no GitHub com o código do último push.             ║${NC}"
+    echo -e "${YELLOW}║  O Windows roda no GitHub com o código do último push.           ║${NC}"
     echo -e "${YELLOW}╚══════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 fi
@@ -95,14 +96,21 @@ ZIP_NAME="pdf-enxuto_windows_${VERSION}.zip"
 APPIMAGE_NAME="pdf-enxuto_${VERSION}_x86_64.AppImage"
 mkdir -p "$WINDOWS_DIR"
 rm -f "$WINDOWS_DIR"/*.zip 2>/dev/null || true
-rm -f "$APPIMAGE_DIR"/*.AppImage 2>/dev/null || true
 
 echo -e "${BLUE}Versão:${NC} $VERSION"
-echo -e "${BLUE}Saída:${NC}  $WINDOWS_DIR"
-echo -e "${BLUE}        ${NC} $APPIMAGE_DIR"
 echo ""
 
-echo -e "${YELLOW}=== Disparando build desktop no GitHub Actions ===${NC}"
+# ---------------------------------------------------------------------------
+# 1) AppImage do Linux — compilado localmente
+# ---------------------------------------------------------------------------
+echo -e "${YELLOW}=== Build Linux (AppImage) nesta máquina ===${NC}"
+SKIP_OPEN_FOLDER=1 bash "$SCRIPT_DIR/.sh/build-appimage.sh"
+echo ""
+
+# ---------------------------------------------------------------------------
+# 2) ZIP do Windows — GitHub Actions
+# ---------------------------------------------------------------------------
+echo -e "${YELLOW}=== Disparando build Windows no GitHub Actions ===${NC}"
 
 if ! command -v gh >/dev/null 2>&1; then
     echo -e "${RED}ERRO: 'gh' não instalado. Instale: sudo apt install gh${NC}"
@@ -131,32 +139,28 @@ echo ""
 
 DEST_ZIP="$WINDOWS_DIR/$ZIP_NAME"
 DEST_APPIMAGE="$APPIMAGE_DIR/$APPIMAGE_NAME"
-TEMP_DOWNLOAD="$APPIMAGE_DIR/.download-tmp"
+TEMP_DOWNLOAD="$WINDOWS_DIR/.download-tmp"
 
-echo -e "${YELLOW}=== Aguardando build desktop no GitHub (~10-20 min) ===${NC}"
+echo -e "${YELLOW}=== Aguardando build Windows no GitHub (~10-15 min) ===${NC}"
 echo "  Acompanhe: $RUN_URL"
 echo ""
 
 if gh run watch "$RUN_ID" --repo "$GITHUB_REPO" --exit-status; then
     echo ""
-    echo -e "${YELLOW}=== Baixando pacotes (Windows ZIP + Linux AppImage) ===${NC}"
+    echo -e "${YELLOW}=== Baixando pacote do Windows ===${NC}"
     rm -rf "$TEMP_DOWNLOAD"
     mkdir -p "$TEMP_DOWNLOAD"
 
     if gh run download "$RUN_ID" --repo "$GITHUB_REPO" -D "$TEMP_DOWNLOAD"; then
         DOWNLOADED_ZIP=$(find "$TEMP_DOWNLOAD" -name "*.zip" -type f | head -1)
-        DOWNLOADED_APPIMAGE=$(find "$TEMP_DOWNLOAD" -name "*.AppImage" -type f | head -1)
 
-        if [ -z "$DOWNLOADED_ZIP" ] || [ -z "$DOWNLOADED_APPIMAGE" ]; then
+        if [ -z "$DOWNLOADED_ZIP" ]; then
             rm -rf "$TEMP_DOWNLOAD"
-            echo -e "${RED}ERRO: download concluído, mas algum artefato não foi encontrado.${NC}"
-            echo "  ZIP:      ${DOWNLOADED_ZIP:-não encontrado}"
-            echo "  AppImage: ${DOWNLOADED_APPIMAGE:-não encontrado}"
+            echo -e "${RED}ERRO: download concluído, mas nenhum .zip encontrado.${NC}"
             exit 1
         fi
 
         mv "$DOWNLOADED_ZIP" "$DEST_ZIP"
-        mv "$DOWNLOADED_APPIMAGE" "$DEST_APPIMAGE"
         rm -rf "$TEMP_DOWNLOAD"
 
         echo ""
@@ -164,16 +168,20 @@ if gh run watch "$RUN_ID" --repo "$GITHUB_REPO" --exit-status; then
         echo -e "${GREEN}   ✓ Build Desktop concluído!${NC}"
         echo -e "${GREEN}=========================================${NC}"
         echo ""
+        if [ -f "$DEST_APPIMAGE" ]; then
+            echo -e "${BLUE}AppImage:${NC} $DEST_APPIMAGE ($(du -h "$DEST_APPIMAGE" | cut -f1))"
+        else
+            echo -e "${RED}AppImage não encontrado: $DEST_APPIMAGE${NC}"
+        fi
         echo -e "${BLUE}Windows:${NC}  $DEST_ZIP ($(du -h "$DEST_ZIP" | cut -f1))"
-        echo -e "${BLUE}AppImage:${NC} $DEST_APPIMAGE ($(du -h "$DEST_APPIMAGE" | cut -f1))"
-        echo ""
-        echo -e "${YELLOW}Para usar no Windows:${NC}"
-        echo "  1. Extraia o ZIP"
-        echo "  2. Execute pdf_enxuto.exe"
         echo ""
         echo -e "${YELLOW}Para usar no Linux (AppImage):${NC}"
         echo "  chmod +x $(basename "$DEST_APPIMAGE")"
         echo "  ./$(basename "$DEST_APPIMAGE")"
+        echo ""
+        echo -e "${YELLOW}Para usar no Windows:${NC}"
+        echo "  1. Extraia o ZIP"
+        echo "  2. Execute pdf_enxuto.exe"
         echo ""
 
         if [[ "$NO_PROMPT" -eq 0 ]] && command -v xdg-open >/dev/null 2>&1; then
@@ -181,11 +189,11 @@ if gh run watch "$RUN_ID" --repo "$GITHUB_REPO" --exit-status; then
         fi
     else
         rm -rf "$TEMP_DOWNLOAD"
-        echo -e "${RED}ERRO: falha ao baixar os artefatos.${NC}"
+        echo -e "${RED}ERRO: falha ao baixar o artefato.${NC}"
         exit 1
     fi
 else
-    echo -e "${RED}ERRO: build falhou no GitHub.${NC}"
+    echo -e "${RED}ERRO: build Windows falhou no GitHub.${NC}"
     echo "  Veja os logs: $RUN_URL"
     exit 1
 fi
