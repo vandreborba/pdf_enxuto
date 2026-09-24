@@ -291,7 +291,7 @@ Future<void> _abrirRelato(
     builder: (dialogContext) => DialogoRelato(
       recurso: recurso,
       informacoesTecnicas: informacoesDoSistema(
-        versao: estado.resultadoAtualizacao?.versaoAtual ?? '1.0.0',
+        versao: estado.versaoApp,
         sistema: Platform.operatingSystemVersion,
         motores: motores,
       ),

@@ -66,6 +66,9 @@ class AppState extends ChangeNotifier {
   bool processando = false;
   String etapaGeral = '';
 
+  /// Versão do aplicativo (lida do pacote na inicialização).
+  String versaoApp = '1.0.0';
+
   ResultadoAtualizacao? resultadoAtualizacao;
   bool verificandoAtualizacao = false;
   bool novidadesAbertas = false;
@@ -94,6 +97,7 @@ class AppState extends ChangeNotifier {
 
   // ------------------------------------------------------------------- setup
   Future<void> iniciar() async {
+    versaoApp = await ServicoAtualizacao.versaoAtual();
     await Future.wait([configuracao.carregar(), historico.carregar()]);
     await motores.detectar();
     carregando = false;

@@ -88,7 +88,7 @@ class _TelaPrincipalState extends State<TelaPrincipal> with WindowListener {
 
   /// Informações anexadas nos e-mails de contato.
   String get informacoesTecnicas {
-    final versao = estado.resultadoAtualizacao?.versaoAtual ?? '1.0.0';
+    final versao = estado.versaoApp;
     final motores = estado.motores.todos
         .where((motor) => motor.disponivel)
         .map((motor) =>
@@ -329,7 +329,7 @@ class _TelaPrincipalState extends State<TelaPrincipal> with WindowListener {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => DialogoSobre(
-        versao: estado.resultadoAtualizacao?.versaoAtual ?? '1.0.0',
+        versao: estado.versaoApp,
         onRelatarProblema: () {
           Navigator.of(dialogContext).pop();
           if (!mounted) return;
