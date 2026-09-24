@@ -9,7 +9,8 @@ enum TaskKind {
   dividir;
 
   String get rotulo => this == TaskKind.comprimir ? 'Compressão' : 'Divisão';
-  String get particulo => this == TaskKind.comprimir ? 'comprimido' : 'dividido';
+  String get particulo =>
+      this == TaskKind.comprimir ? 'comprimido' : 'dividido';
 }
 
 /// Situação de um item da fila.
@@ -59,28 +60,28 @@ class ItemResult {
   }
 
   Map<String, dynamic> toJson() => {
-        'entrada': entrada,
-        'saidas': saidas,
-        'antes': bytesAntes,
-        'depois': bytesDepois,
-        'ms': duracao.inMilliseconds,
-        'motor': motor,
-        'aviso': aviso,
-        'erro': erro,
-        'alvoOk': alvoAtingido,
-      };
+    'entrada': entrada,
+    'saidas': saidas,
+    'antes': bytesAntes,
+    'depois': bytesDepois,
+    'ms': duracao.inMilliseconds,
+    'motor': motor,
+    'aviso': aviso,
+    'erro': erro,
+    'alvoOk': alvoAtingido,
+  };
 
   static ItemResult fromJson(Map<String, dynamic> json) => ItemResult(
-        entrada: json['entrada'] as String? ?? '',
-        saidas: (json['saidas'] as List?)?.cast<String>() ?? const [],
-        bytesAntes: (json['antes'] as num?)?.toInt() ?? 0,
-        bytesDepois: (json['depois'] as num?)?.toInt() ?? 0,
-        duracao: Duration(milliseconds: (json['ms'] as num?)?.toInt() ?? 0),
-        motor: json['motor'] as String?,
-        aviso: json['aviso'] as String?,
-        erro: json['erro'] as String?,
-        alvoAtingido: json['alvoOk'] as bool?,
-      );
+    entrada: json['entrada'] as String? ?? '',
+    saidas: (json['saidas'] as List?)?.cast<String>() ?? const [],
+    bytesAntes: (json['antes'] as num?)?.toInt() ?? 0,
+    bytesDepois: (json['depois'] as num?)?.toInt() ?? 0,
+    duracao: Duration(milliseconds: (json['ms'] as num?)?.toInt() ?? 0),
+    motor: json['motor'] as String?,
+    aviso: json['aviso'] as String?,
+    erro: json['erro'] as String?,
+    alvoAtingido: json['alvoOk'] as bool?,
+  );
 }
 
 /// Uma entrada do histórico (persistida em disco).
@@ -102,22 +103,23 @@ class HistoryEntry {
   final String resumo;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'quando': quando.toIso8601String(),
-        'kind': kind.name,
-        'resumo': resumo,
-        'resultado': resultado.toJson(),
-      };
+    'id': id,
+    'quando': quando.toIso8601String(),
+    'kind': kind.name,
+    'resumo': resumo,
+    'resultado': resultado.toJson(),
+  };
 
   static HistoryEntry fromJson(Map<String, dynamic> json) => HistoryEntry(
-        id: json['id'] as String? ?? '',
-        quando: DateTime.tryParse(json['quando'] as String? ?? '') ??
-            DateTime.now(),
-        kind: json['kind'] == 'dividir' ? TaskKind.dividir : TaskKind.comprimir,
-        resumo: json['resumo'] as String? ?? '',
-        resultado:
-            ItemResult.fromJson((json['resultado'] as Map?)?.cast<String, dynamic>() ?? {}),
-      );
+    id: json['id'] as String? ?? '',
+    quando:
+        DateTime.tryParse(json['quando'] as String? ?? '') ?? DateTime.now(),
+    kind: json['kind'] == 'dividir' ? TaskKind.dividir : TaskKind.comprimir,
+    resumo: json['resumo'] as String? ?? '',
+    resultado: ItemResult.fromJson(
+      (json['resultado'] as Map?)?.cast<String, dynamic>() ?? {},
+    ),
+  );
 }
 
 /// Plano de divisão: uma parte por arquivo de saída.
@@ -163,15 +165,16 @@ enum SplitMethod {
   extrair,
   marcadores;
 
-  bool get usaIntervalos => this == SplitMethod.intervalos || this == SplitMethod.extrair;
+  bool get usaIntervalos =>
+      this == SplitMethod.intervalos || this == SplitMethod.extrair;
 
   String get rotulo => switch (this) {
-        SplitMethod.intervalos => 'Por intervalos',
-        SplitMethod.cadaN => 'A cada N páginas',
-        SplitMethod.porTamanho => 'Por tamanho máximo',
-        SplitMethod.extrair => 'Extrair páginas',
-        SplitMethod.marcadores => 'Por marcadores',
-      };
+    SplitMethod.intervalos => 'Por intervalos',
+    SplitMethod.cadaN => 'A cada N páginas',
+    SplitMethod.porTamanho => 'Por tamanho máximo',
+    SplitMethod.extrair => 'Extrair páginas',
+    SplitMethod.marcadores => 'Por marcadores',
+  };
 }
 
 /// Opções da tela de divisão.
@@ -232,39 +235,38 @@ class SplitOptions {
       padraoNome: padraoNome ?? this.padraoNome,
       umArquivoSo: umArquivoSo ?? this.umArquivoSo,
       umaPaginaPorArquivo: umaPaginaPorArquivo ?? this.umaPaginaPorArquivo,
-      incluirNumeroParte:
-          incluirNumeroParte ?? this.incluirNumeroParte,
+      incluirNumeroParte: incluirNumeroParte ?? this.incluirNumeroParte,
     );
   }
 
   static const SplitOptions padrao = SplitOptions();
 
   Map<String, dynamic> toJson() => {
-        'metodo': metodo.name,
-        'intervalos': intervalosTexto,
-        'porParte': paginasPorParte,
-        'maxBytes': maxBytes,
-        'extrair': extrairTexto,
-        'padrao': padraoNome,
-        'umArquivo': umArquivoSo,
-        'umaPagina': umaPaginaPorArquivo,
-        'numerar': incluirNumeroParte,
-      };
+    'metodo': metodo.name,
+    'intervalos': intervalosTexto,
+    'porParte': paginasPorParte,
+    'maxBytes': maxBytes,
+    'extrair': extrairTexto,
+    'padrao': padraoNome,
+    'umArquivo': umArquivoSo,
+    'umaPagina': umaPaginaPorArquivo,
+    'numerar': incluirNumeroParte,
+  };
 
   factory SplitOptions.fromJson(Map<String, dynamic> json) => SplitOptions(
-        metodo: SplitMethod.values.firstWhere(
-          (m) => m.name == json['metodo'],
-          orElse: () => SplitMethod.intervalos,
-        ),
-        intervalosTexto: json['intervalos'] as String? ?? '',
-        paginasPorParte: (json['porParte'] as num?)?.toInt() ?? 10,
-        maxBytes: (json['maxBytes'] as num?)?.toInt() ?? 10 * 1024 * 1024,
-        extrairTexto: json['extrair'] as String? ?? '',
-        padraoNome: json['padrao'] as String? ?? '{nome} - parte {parte}',
-        umArquivoSo: json['umArquivo'] as bool? ?? false,
-        umaPaginaPorArquivo: json['umaPagina'] as bool? ?? false,
-        incluirNumeroParte: json['numerar'] as bool? ?? true,
-      );
+    metodo: SplitMethod.values.firstWhere(
+      (m) => m.name == json['metodo'],
+      orElse: () => SplitMethod.intervalos,
+    ),
+    intervalosTexto: json['intervalos'] as String? ?? '',
+    paginasPorParte: (json['porParte'] as num?)?.toInt() ?? 10,
+    maxBytes: (json['maxBytes'] as num?)?.toInt() ?? 10 * 1024 * 1024,
+    extrairTexto: json['extrair'] as String? ?? '',
+    padraoNome: json['padrao'] as String? ?? '{nome} - parte {parte}',
+    umArquivoSo: json['umArquivo'] as bool? ?? false,
+    umaPaginaPorArquivo: json['umaPagina'] as bool? ?? false,
+    incluirNumeroParte: json['numerar'] as bool? ?? true,
+  );
 }
 
 /// Opções completas de uma tarefa (compressão ou divisão), persistível.
@@ -275,26 +277,26 @@ class TaskOptions {
   final SplitOptions? divisao;
 
   Map<String, dynamic> toJson() => {
-        if (compressao != null)
-          'compressao': {
-            'preset': compressao!.preset.name,
-            'textMode': compressao!.textMode.name,
-            'engine': compressao!.engine.name,
-            'target': compressao!.targetEnabled,
-            'targetBytes': compressao!.targetBytes,
-            'targetScope': compressao!.targetScope.name,
-            'dpi': compressao!.dpi,
-            'jpeg': compressao!.jpegQuality,
-            'cor': compressao!.colorMode.name,
-            'metadados': compressao!.removeMetadata,
-            'marcadores': compressao!.removeBookmarks,
-            'anotacoes': compressao!.removeAnnotations,
-            'miniaturas': compressao!.removeThumbnails,
-            'estrutura': compressao!.optimizeStructure,
-            'fluxos': compressao!.recompressStreams,
-          },
-        if (divisao != null) 'divisao': divisao!.toJson(),
-      };
+    if (compressao != null)
+      'compressao': {
+        'preset': compressao!.preset.name,
+        'textMode': compressao!.textMode.name,
+        'engine': compressao!.engine.name,
+        'target': compressao!.targetEnabled,
+        'targetBytes': compressao!.targetBytes,
+        'targetScope': compressao!.targetScope.name,
+        'dpi': compressao!.dpi,
+        'jpeg': compressao!.jpegQuality,
+        'cor': compressao!.colorMode.name,
+        'metadados': compressao!.removeMetadata,
+        'marcadores': compressao!.removeBookmarks,
+        'anotacoes': compressao!.removeAnnotations,
+        'miniaturas': compressao!.removeThumbnails,
+        'estrutura': compressao!.optimizeStructure,
+        'fluxos': compressao!.recompressStreams,
+      },
+    if (divisao != null) 'divisao': divisao!.toJson(),
+  };
 
   String encode() => jsonEncode(toJson());
 }

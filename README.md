@@ -56,10 +56,10 @@ Se um motor falhar, o app cai automaticamente para o próximo — você nunca fi
 
 ### Paletas de cor
 
-Oito combinações prontas, trocadas em **Configurações → Aparência** (a padrão é a
-"Papel & Ouro"):
+Oito cores de destaque sóbrias, trocadas em **Configurações → Aparência** (a padrão é a
+"Petróleo"). Todas usam uma cor única, sem degradês:
 
-![Paletas](assets/branding/paletas.png)
+![Cores de destaque](assets/branding/cores-sobrias.png)
 
 ## Instalação
 

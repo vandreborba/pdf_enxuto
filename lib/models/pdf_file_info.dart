@@ -4,7 +4,11 @@ import 'package:pdf_enxuto/models/page_range.dart';
 
 /// Um marcador (bookmark) do PDF, usado para dividir por capítulos.
 class PdfBookmark {
-  const PdfBookmark({required this.titulo, required this.pagina, this.nivel = 0});
+  const PdfBookmark({
+    required this.titulo,
+    required this.pagina,
+    this.nivel = 0,
+  });
 
   final String titulo;
 
@@ -88,10 +92,6 @@ class PdfFileInfo {
     );
   }
 
-  static PdfFileInfo comErro(String caminho, String mensagem) => PdfFileInfo(
-        caminho: caminho,
-        bytes: 0,
-        paginas: 0,
-        erro: mensagem,
-      );
+  static PdfFileInfo comErro(String caminho, String mensagem) =>
+      PdfFileInfo(caminho: caminho, bytes: 0, paginas: 0, erro: mensagem);
 }

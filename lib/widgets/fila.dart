@@ -51,18 +51,10 @@ class _ZonaSoltarState extends State<ZonaSoltar> {
             vertical: widget.compacta ? 18 : 34,
           ),
           decoration: BoxDecoration(
-            gradient: ativo
-                ? LinearGradient(
-                    colors: [
-                      cores.accent.withValues(alpha: 0.18),
-                      cores.accentSecundaria.withValues(alpha: 0.12),
-                    ],
-                  )
-                : null,
             color: ativo
-                ? null
-                : esquema.surfaceContainerHighest.withValues(alpha: 0.28),
-            borderRadius: BorderRadius.circular(18),
+                ? cores.accent.withValues(alpha: 0.07)
+                : esquema.surfaceContainerHighest.withValues(alpha: 0.22),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: ativo
                   ? cores.accent
@@ -100,10 +92,9 @@ class _ZonaSoltarState extends State<ZonaSoltar> {
                 const SizedBox(height: 6),
                 Text(
                   S.solteArquivosDica,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: esquema.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: esquema.onSurfaceVariant,
+                  ),
                 ),
               ],
             ],
@@ -143,19 +134,11 @@ class SobreposicaoSolta extends StatelessWidget {
             builder: (context, escala, filho) =>
                 Transform.scale(scale: escala, child: filho),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 46, vertical: 38),
+              padding: const EdgeInsets.symmetric(horizontal: 46, vertical: 38),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(26),
-                border: Border.all(color: cores.accent, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: cores.accent.withValues(alpha: 0.35),
-                    blurRadius: 40,
-                    spreadRadius: 4,
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: cores.accent, width: 1.5),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -218,8 +201,8 @@ class ItemDaFila extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: esquema.surface.withValues(alpha: 0.7),
-          borderRadius: BorderRadius.circular(18),
+          color: cores.fundoCartao,
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: switch (item.status) {
               JobStatus.concluido => cores.sucesso.withValues(alpha: 0.5),
@@ -227,15 +210,8 @@ class ItemDaFila extends StatelessWidget {
               JobStatus.processando => cores.accent.withValues(alpha: 0.6),
               _ => esquema.outlineVariant.withValues(alpha: 0.5),
             },
-            width: item.status == JobStatus.processando ? 1.8 : 1,
+            width: item.status == JobStatus.processando ? 1.6 : 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -488,9 +464,7 @@ class ComparadorTamanho extends StatelessWidget {
         const SizedBox(height: 6),
         _LinhaBarra(
           rotulo: 'Depois',
-          valor: resultado.saidas.isEmpty
-              ? 'sem alteração'
-              : Fmt.bytes(depois),
+          valor: resultado.saidas.isEmpty ? 'sem alteração' : Fmt.bytes(depois),
           fator: resultado.saidas.isEmpty ? fatorAntes : fatorDepois,
           cor: reduziu ? cores.sucesso : cores.alerta,
         ),
@@ -623,20 +597,25 @@ class _Miniatura extends StatelessWidget {
       decoration: BoxDecoration(
         color: esquema.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: esquema.outlineVariant.withValues(alpha: 0.6)),
+        border: Border.all(
+          color: esquema.outlineVariant.withValues(alpha: 0.6),
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: !valido
-          ? Icon(Icons.broken_image_outlined,
-              size: 22, color: esquema.onSurfaceVariant)
+          ? Icon(
+              Icons.broken_image_outlined,
+              size: 22,
+              color: esquema.onSurfaceVariant,
+            )
           : FutureBuilder(
               future: InspecaoPdf.miniatura(caminho, largura: 104),
               builder: (context, instantaneo) {
                 final png = instantaneo.data;
                 if (png == null) {
                   return AnimatedOpacity(
-                    opacity: instantaneo.connectionState ==
-                            ConnectionState.waiting
+                    opacity:
+                        instantaneo.connectionState == ConnectionState.waiting
                         ? 1
                         : 0.6,
                     duration: Motion.escolher(context, Motion.media),
@@ -647,7 +626,11 @@ class _Miniatura extends StatelessWidget {
                     ),
                   );
                 }
-                return Image.memory(png, fit: BoxFit.cover, gaplessPlayback: true);
+                return Image.memory(
+                  png,
+                  fit: BoxFit.cover,
+                  gaplessPlayback: true,
+                );
               },
             ),
     );

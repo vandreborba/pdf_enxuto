@@ -32,7 +32,8 @@ class ResultadoAtualizacao {
   final bool erroRede;
 
   bool get temAtualizacao =>
-      ultimaVersao != null && ServicoAtualizacao.versaoMaior(ultimaVersao!, versaoAtual);
+      ultimaVersao != null &&
+      ServicoAtualizacao.versaoMaior(ultimaVersao!, versaoAtual);
 
   bool get verificou => ultimaVersao != null || erroRede;
 }
@@ -61,13 +62,17 @@ class ServicoAtualizacao {
     final atual = await versaoAtual();
 
     try {
-      final resposta = await http.get(
-        Uri.parse('https://api.github.com/repos/${AppInfo.repo}/releases/latest'),
-        headers: {
-          'Accept': 'application/vnd.github+json',
-          'User-Agent': 'pdf-enxuto',
-        },
-      ).timeout(const Duration(seconds: 12));
+      final resposta = await http
+          .get(
+            Uri.parse(
+              'https://api.github.com/repos/${AppInfo.repo}/releases/latest',
+            ),
+            headers: {
+              'Accept': 'application/vnd.github+json',
+              'User-Agent': 'pdf-enxuto',
+            },
+          )
+          .timeout(const Duration(seconds: 12));
 
       if (resposta.statusCode != 200) {
         return ResultadoAtualizacao(versaoAtual: atual, erroRede: true);
@@ -124,13 +129,10 @@ class ServicoAtualizacao {
     return false;
   }
 
-  static List<int> _partes(String versao) => versao
-      .split('.')
-      .map((parte) {
-        final match = RegExp(r'^\d+').firstMatch(parte.trim());
-        return match == null ? 0 : int.tryParse(match.group(0)!) ?? 0;
-      })
-      .toList();
+  static List<int> _partes(String versao) => versao.split('.').map((parte) {
+    final match = RegExp(r'^\d+').firstMatch(parte.trim());
+    return match == null ? 0 : int.tryParse(match.group(0)!) ?? 0;
+  }).toList();
 
   /// Baixa o pacote da nova versão para a pasta de downloads.
   ///
@@ -156,7 +158,8 @@ class ServicoAtualizacao {
   }
 
   static Future<String> _pastaDownloads() async {
-    final casa = Platform.environment['HOME'] ??
+    final casa =
+        Platform.environment['HOME'] ??
         Platform.environment['USERPROFILE'] ??
         Directory.systemTemp.path;
     final candidata = Directory('$casa${Platform.pathSeparator}Downloads');

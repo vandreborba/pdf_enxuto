@@ -18,10 +18,10 @@ class Motores {
   List<MotorPdf> get todos => [nativo, ghostscript, qpdf];
 
   MotorPdf porTipo(EngineKind tipo) => switch (tipo) {
-        EngineKind.ghostscript => ghostscript,
-        EngineKind.qpdf => qpdf,
-        EngineKind.nativo || EngineKind.automatico => nativo,
-      };
+    EngineKind.ghostscript => ghostscript,
+    EngineKind.qpdf => qpdf,
+    EngineKind.nativo || EngineKind.automatico => nativo,
+  };
 
   /// Procura os motores externos (uma vez, ou forçado pelo botão).
   Future<void> detectar({bool forcar = false}) async {
@@ -43,22 +43,13 @@ class Motores {
 
     switch (opcoes.engine) {
       case EngineKind.ghostscript:
-        return [
-          if (ghostscript.disponivel) ghostscript,
-          nativo,
-        ];
+        return [if (ghostscript.disponivel) ghostscript, nativo];
       case EngineKind.qpdf:
-        return [
-          if (qpdf.disponivel) qpdf,
-          nativo,
-        ];
+        return [if (qpdf.disponivel) qpdf, nativo];
       case EngineKind.nativo:
         return [nativo];
       case EngineKind.automatico:
-        return [
-          if (ghostscript.disponivel) ghostscript,
-          nativo,
-        ];
+        return [if (ghostscript.disponivel) ghostscript, nativo];
     }
   }
 
@@ -80,6 +71,15 @@ class Motores {
     return avisos;
   }
 
-  bool get algumExterno =>
-      ghostscript.disponivel || qpdf.disponivel;
+  bool get algumExterno => ghostscript.disponivel || qpdf.disponivel;
+
+  /// Diz se dá para "perseguir" um tamanho alvo com as opções escolhidas.
+  ///
+  /// Perseguir o alvo exige um motor com botões de qualidade: o Ghostscript
+  /// ou o motor nativo no modo "vira imagem". O qpdf e a limpeza estrutural
+  /// não têm o que ajustar.
+  bool permiteBuscaDeAlvo(CompressionOptions opcoes) {
+    if (opcoes.textMode == TextMode.rasterizar) return true;
+    return motorPrevisto(opcoes).tipo == EngineKind.ghostscript;
+  }
 }

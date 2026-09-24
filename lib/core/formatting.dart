@@ -19,7 +19,8 @@ class Fmt {
       unidade++;
     }
 
-    if (decimais != null) return '${_numero(tamanho, decimais)} ${_unidades[unidade]}';
+    if (decimais != null)
+      return '${_numero(tamanho, decimais)} ${_unidades[unidade]}';
     // Até duas casas, sem zeros à direita: "1,5 KB", "5 MB", "12,25 MB".
     final casas = tamanho >= 100 ? 0 : 2;
     return '${_semZeros(_numero(tamanho, casas))} ${_unidades[unidade]}';
@@ -48,7 +49,9 @@ class Fmt {
     final segundos = d.inSeconds;
     if (segundos < 60) {
       final resto = ms % 1000;
-      return resto >= 100 ? '${_numero(segundos + resto / 1000, 1)} s' : '$segundos s';
+      return resto >= 100
+          ? '${_numero(segundos + resto / 1000, 1)} s'
+          : '$segundos s';
     }
     final minutos = segundos ~/ 60;
     final resto = segundos % 60;
@@ -124,8 +127,9 @@ class Fmt {
         .replaceAll(',', '.');
     if (limpo.isEmpty) return null;
 
-    final match = RegExp(r'^([0-9]*\.?[0-9]+)(b|kb|k|mb|m|gb|g|tb|t)?$')
-        .firstMatch(limpo);
+    final match = RegExp(
+      r'^([0-9]*\.?[0-9]+)(b|kb|k|mb|m|gb|g|tb|t)?$',
+    ).firstMatch(limpo);
     if (match == null) return null;
 
     final valor = double.tryParse(match.group(1)!);

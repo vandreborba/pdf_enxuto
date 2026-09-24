@@ -122,13 +122,6 @@ class PaginaConfiguracoes extends StatelessWidget {
                     config.copyWith(sobrescrever: valor),
                   ),
                 ),
-                LinhaOpcao(
-                  titulo: S.confirmarSaida,
-                  valor: config.confirmarSaida,
-                  onMudar: (valor) => estado.atualizarConfig(
-                    config.copyWith(confirmarSaida: valor),
-                  ),
-                ),
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -323,11 +316,7 @@ class _BolhaCor extends StatelessWidget {
           width: 46,
           height: 46,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [paleta.primaria, paleta.secundaria],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: paleta.cor,
             shape: BoxShape.circle,
             border: Border.all(
               color: selecionada

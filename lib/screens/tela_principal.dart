@@ -91,8 +91,10 @@ class _TelaPrincipalState extends State<TelaPrincipal> with WindowListener {
     final versao = estado.versaoApp;
     final motores = estado.motores.todos
         .where((motor) => motor.disponivel)
-        .map((motor) =>
-            '${motor.nome}${motor.estado.versao != null ? ' ${motor.estado.versao}' : ''}')
+        .map(
+          (motor) =>
+              '${motor.nome}${motor.estado.versao != null ? ' ${motor.estado.versao}' : ''}',
+        )
         .join(', ');
     return 'PDF Enxuto $versao\n'
         'Sistema: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}\n'
@@ -107,42 +109,12 @@ class _TelaPrincipalState extends State<TelaPrincipal> with WindowListener {
 
   @override
   void onWindowClose() async {
-    // Guarda tamanho e posição da janela para a próxima sessão.
-    if (estado.processando) {
-      final sair = await _confirmarFechamento(
-        'Há uma tarefa em andamento. Se fechar agora, ela será interrompida.',
-      );
-      if (!sair) return;
-      estado.cancelarTudo();
-    } else if (estado.config.confirmarSaida) {
-      final sair = await _confirmarFechamento(null);
-      if (!sair) return;
-    }
-
+    // Fecha direto, sem janela de confirmação: guarda a posição/tamanho da
+    // janela e sai. Tarefas em andamento são interrompidas — os motores só
+    // renomeiam o arquivo final no fim, então nada fica pela metade.
+    if (estado.processando) estado.cancelarTudo();
     await ServicoJanela.salvar();
     await windowManager.destroy();
-  }
-
-  Future<bool> _confirmarFechamento(String? aviso) async {
-    if (!mounted) return true;
-    final resposta = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Fechar o PDF Enxuto?'),
-        content: Text(aviso ?? 'Nenhuma tarefa em andamento. Até logo!'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Continuar aqui'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Fechar'),
-          ),
-        ],
-      ),
-    );
-    return resposta ?? false;
   }
 
   @override
@@ -174,51 +146,53 @@ class _TelaPrincipalState extends State<TelaPrincipal> with WindowListener {
             if (!mounted) return;
             _avisarSobreArquivos(resultado);
           },
-          child: Stack(
-            children: [
-              FundoAnimado(
-                child: Scaffold(
-                  backgroundColor: Colors.transparent,
-                  body: Column(
-                    children: [
-                      BarraTitulo(
-                        titulo: S.appName,
-                        subtitulo: _secao.rotulo,
-                        maximizada: _maximizada,
-                      ),
-                      Expanded(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _BarraLateral(
-                              secao: _secao,
-                              estado: estado,
-                              onMudar: (secao) =>
-                                  setState(() => _secao = secao),
-                              onSobre: _mostrarSobre,
-                              onRelatar: () => _mostrarRelato(),
-                              onRecurso: () => _mostrarRelato(recurso: true),
-                            ),
-                            Expanded(child: _conteudo()),
-                          ],
+          // Como a janela não tem moldura do sistema, as bordas precisam ser
+          // redimensionáveis pelo próprio app.
+          child: DragToResizeArea(
+            resizeEdgeSize: 6,
+            child: Stack(
+              children: [
+                FundoAnimado(
+                  child: Scaffold(
+                    backgroundColor: Colors.transparent,
+                    body: Column(
+                      children: [
+                        BarraTitulo(
+                          titulo: S.appName,
+                          subtitulo: _secao.rotulo,
+                          maximizada: _maximizada,
                         ),
-                      ),
-                    ],
+                        Expanded(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _BarraLateral(
+                                secao: _secao,
+                                estado: estado,
+                                onMudar: (secao) =>
+                                    setState(() => _secao = secao),
+                                onSobre: _mostrarSobre,
+                                onRelatar: () => _mostrarRelato(),
+                                onRecurso: () => _mostrarRelato(recurso: true),
+                              ),
+                              Expanded(child: _conteudo()),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              SobreposicaoSolta(
-                visivel: _arrastando,
-                quantidade: 1,
-              ),
-              if (estado.processando)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  child: _BarraDeProgressoGlobal(estado: estado),
-                ),
-            ],
+                SobreposicaoSolta(visivel: _arrastando, quantidade: 1),
+                if (estado.processando)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    child: _BarraDeProgressoGlobal(estado: estado),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -476,15 +450,8 @@ class _BarraLateral extends StatelessWidget {
                   height: 44,
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: cores.gradienteMarca),
-                    borderRadius: BorderRadius.circular(13),
-                    boxShadow: [
-                      BoxShadow(
-                        color: cores.accent.withValues(alpha: 0.35),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
+                    color: cores.accentSuave,
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Image.asset('assets/icons/icon.png'),
                 ),
@@ -504,9 +471,9 @@ class _BarraLateral extends StatelessWidget {
                       Text(
                         '100% local',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: cores.sucesso,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          color: cores.sucesso,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -638,24 +605,20 @@ class _ItemNavegacaoState extends State<_ItemNavegacao> {
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            gradient: widget.selecionada
-                ? LinearGradient(colors: cores.gradienteMarca)
-                : null,
+            // Item selecionado: fundo discreto na cor do app e uma barrinha
+            // à esquerda, em vez de um bloco colorido.
             color: widget.selecionada
-                ? null
+                ? cores.accent.withValues(alpha: 0.10)
                 : (_sobre
-                    ? esquema.surfaceContainerHighest.withValues(alpha: 0.4)
-                    : Colors.transparent),
-            borderRadius: BorderRadius.circular(13),
-            boxShadow: widget.selecionada
-                ? [
-                    BoxShadow(
-                      color: cores.accent.withValues(alpha: 0.3),
-                      blurRadius: 14,
-                      offset: const Offset(0, 5),
-                    ),
-                  ]
-                : null,
+                      ? esquema.surfaceContainerHighest.withValues(alpha: 0.35)
+                      : Colors.transparent),
+            borderRadius: BorderRadius.circular(8),
+            border: Border(
+              left: BorderSide(
+                color: widget.selecionada ? cores.accent : Colors.transparent,
+                width: 3,
+              ),
+            ),
           ),
           child: Row(
             children: [
@@ -663,19 +626,18 @@ class _ItemNavegacaoState extends State<_ItemNavegacao> {
                 widget.secao.icone,
                 size: 19,
                 color: widget.selecionada
-                    ? Colors.white
+                    ? cores.accent
                     : (ativo ? cores.accent : esquema.onSurfaceVariant),
               ),
               const SizedBox(width: 12),
               Text(
                 widget.secao.rotulo,
                 style: TextStyle(
-                  fontWeight:
-                      widget.selecionada ? FontWeight.w700 : FontWeight.w600,
+                  fontWeight: widget.selecionada
+                      ? FontWeight.w700
+                      : FontWeight.w600,
                   fontSize: 14,
-                  color: widget.selecionada
-                      ? Colors.white
-                      : esquema.onSurface,
+                  color: widget.selecionada ? Colors.white : esquema.onSurface,
                 ),
               ),
             ],
@@ -719,17 +681,13 @@ class _Cabecalho extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  titulo,
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
+                Text(titulo, style: Theme.of(context).textTheme.headlineMedium),
                 const SizedBox(height: 2),
                 Text(
                   subtitulo,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: esquema.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: esquema.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),

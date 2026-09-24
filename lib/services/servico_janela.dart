@@ -1,4 +1,6 @@
 import 'dart:convert';
+
+import 'package:pdf_enxuto/core/sistema.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -17,33 +19,39 @@ class ServicoJanela {
   static Future<void> preparar() async {
     await windowManager.ensureInitialized();
 
-    final salvo = await _ler();
-    final opcoes = WindowOptions(
-      size: salvo?.tamanho ?? tamanhoPadrao,
-      minimumSize: tamanhoMinimo,
-      center: salvo == null,
-      backgroundColor: Colors.transparent,
-      skipTaskbar: false,
-      title: 'PDF Enxuto',
-      titleBarStyle: TitleBarStyle.normal,
-      windowButtonVisibility: true,
-    );
-
-    // O fechamento passa pelo app (para salvar a janela e confirmar).
+    // O fechamento passa pelo app (para salvar a janela). Fechar é imediato:
+    // nenhuma confirmação é exibida.
     await windowManager.setPreventClose(true);
 
-    await windowManager.waitUntilReadyToShow(opcoes, () async {
-      if (salvo != null) {
-        if (_estaVisivel(salvo.posicao, salvo.tamanho)) {
-          await windowManager.setPosition(salvo.posicao);
-        } else {
-          await windowManager.center();
-        }
-      }
-      await windowManager.show();
-      await windowManager.focus();
-      await _aplicarIcone();
-    });
+    // Sem moldura do sistema: no Linux o TitleBarStyle do Flutter não tem
+    // efeito, então removemos a decoração do GTK; no Windows/macOS usamos o
+    // estilo "hidden", que também esconde os botões do sistema.
+    if (Sistema.ehLinux) {
+      await windowManager.setAsFrameless();
+    } else {
+      await windowManager.setTitleBarStyle(
+        TitleBarStyle.hidden,
+        windowButtonVisibility: false,
+      );
+    }
+
+    final salvo = await _ler();
+    final tamanho = salvo?.tamanho ?? tamanhoPadrao;
+
+    await windowManager.setMinimumSize(tamanhoMinimo);
+    await windowManager.setSize(tamanho);
+    await windowManager.setTitle('PDF Enxuto');
+    await _aplicarIcone();
+
+    // Posiciona antes de mostrar, para a janela não "pular" na tela.
+    if (salvo != null && _estaVisivel(salvo.posicao, tamanho)) {
+      await windowManager.setPosition(salvo.posicao);
+    } else {
+      await windowManager.center();
+    }
+
+    await windowManager.show();
+    await windowManager.focus();
   }
 
   static Future<void> _aplicarIcone() async {
@@ -104,37 +112,14 @@ class ServicoJanela {
     }
   }
 
-  /// Diálogo de confirmação antes de fechar (se o usuário pediu).
-  static Future<bool> confirmarFechamento(BuildContext context) async {
-    final resposta = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Fechar o PDF Enxuto?'),
-        content: const Text(
-          'Não há tarefas em andamento. Até logo!',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Continuar aqui'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Fechar'),
-          ),
-        ],
-      ),
-    );
-    return resposta ?? false;
-  }
-
   static Future<void> definirTitulo(String titulo) async {
     try {
       await windowManager.setTitle(titulo);
     } catch (_) {}
   }
 
-  static bool get suportaIcone => !Platform.isLinux || Platform.environment.containsKey('DISPLAY');
+  static bool get suportaIcone =>
+      !Platform.isLinux || Platform.environment.containsKey('DISPLAY');
 }
 
 class _EstadoJanela {

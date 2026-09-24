@@ -366,7 +366,8 @@ class PdfWriter {
   static void _escreverNome(String nome, BytesBuilder saida) {
     saida.addByte(0x2F);
     for (final codigo in nome.codeUnits) {
-      final precisaEscape = codigo < 0x21 ||
+      final precisaEscape =
+          codigo < 0x21 ||
           codigo > 0x7E ||
           codigo == 0x23 ||
           codigo == 0x2F ||
@@ -380,7 +381,11 @@ class PdfWriter {
           codigo == 0x7D ||
           codigo == 0x25;
       if (precisaEscape) {
-        saida.add(latin1.encode('#${codigo.toRadixString(16).padLeft(2, '0').toUpperCase()}'));
+        saida.add(
+          latin1.encode(
+            '#${codigo.toRadixString(16).padLeft(2, '0').toUpperCase()}',
+          ),
+        );
       } else {
         saida.addByte(codigo);
       }

@@ -37,7 +37,8 @@ class InspecaoPdf {
     final inicio = latin1.decode(dados.sublist(0, 8), allowInvalid: true);
     if (!inicio.startsWith('JVBERi0')) return null;
     try {
-      final texto = utf8.decode(dados, allowMalformed: true)
+      final texto = utf8
+          .decode(dados, allowMalformed: true)
           .replaceAll(RegExp(r'\s'), '');
       final decodificado = base64.decode(texto);
       return Uint8List.fromList(decodificado);
@@ -126,8 +127,10 @@ class InspecaoPdf {
         produtor: leitor.produtor,
       );
     } catch (erro) {
-      return PdfFileInfo.comErro('', 'Falha ao ler o PDF: $erro')
-          .copyWith(bytes: tamanho);
+      return PdfFileInfo.comErro(
+        '',
+        'Falha ao ler o PDF: $erro',
+      ).copyWith(bytes: tamanho);
     }
   }
 
@@ -136,7 +139,10 @@ class InspecaoPdf {
   static bool _pdfiumPronto = false;
 
   /// Desenha a primeira página em miniatura (PNG), para os cards da fila.
-  static Future<Uint8List?> miniatura(String caminho, {int largura = 150}) async {
+  static Future<Uint8List?> miniatura(
+    String caminho, {
+    int largura = 150,
+  }) async {
     if (_cacheMiniaturas.containsKey(caminho)) {
       return _cacheMiniaturas[caminho];
     }

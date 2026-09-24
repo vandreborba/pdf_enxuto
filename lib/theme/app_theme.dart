@@ -27,49 +27,60 @@ class Motion {
 class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
     required this.accent,
-    required this.accentSecundaria,
-    required this.gradienteMarca,
-    required this.gradienteSuperficie,
+    required this.accentEscuro,
+    required this.accentSuave,
+    required this.fundo,
+    required this.fundoCartao,
     required this.sucesso,
     required this.alerta,
     required this.perigo,
-    required this.brilho,
   });
 
+  /// Cor de destaque única do aplicativo.
   final Color accent;
-  final Color accentSecundaria;
 
-  /// Gradiente da identidade visual (usado no logo, botões e destaques).
-  final List<Color> gradienteMarca;
+  /// Mesma cor, mais escura (hover, pressionado, texto sobre fundo claro).
+  final Color accentEscuro;
 
-  /// Gradiente sutil usado no fundo das telas.
-  final List<Color> gradienteSuperficie;
+  /// Mesma cor, bem clara — para fundos discretos de realce.
+  final Color accentSuave;
+
+  /// Cor de fundo da janela (lisa, sem degradê).
+  final Color fundo;
+
+  /// Cor dos cartões e barras.
+  final Color fundoCartao;
 
   final Color sucesso;
   final Color alerta;
   final Color perigo;
-  final Color brilho;
+
+  /// Cor do texto/ícone quando ele fica em cima da cor de destaque.
+  /// Escolhida pelo contraste, para funcionar em qualquer paleta e tema.
+  Color get sobreAccent => accent.computeLuminance() > 0.45
+      ? const Color(0xFF11151C)
+      : const Color(0xFFFFFFFF);
 
   @override
   AppColors copyWith({
     Color? accent,
-    Color? accentSecundaria,
-    List<Color>? gradienteMarca,
-    List<Color>? gradienteSuperficie,
+    Color? accentEscuro,
+    Color? accentSuave,
+    Color? fundo,
+    Color? fundoCartao,
     Color? sucesso,
     Color? alerta,
     Color? perigo,
-    Color? brilho,
   }) {
     return AppColors(
       accent: accent ?? this.accent,
-      accentSecundaria: accentSecundaria ?? this.accentSecundaria,
-      gradienteMarca: gradienteMarca ?? this.gradienteMarca,
-      gradienteSuperficie: gradienteSuperficie ?? this.gradienteSuperficie,
+      accentEscuro: accentEscuro ?? this.accentEscuro,
+      accentSuave: accentSuave ?? this.accentSuave,
+      fundo: fundo ?? this.fundo,
+      fundoCartao: fundoCartao ?? this.fundoCartao,
       sucesso: sucesso ?? this.sucesso,
       alerta: alerta ?? this.alerta,
       perigo: perigo ?? this.perigo,
-      brilho: brilho ?? this.brilho,
     );
   }
 
@@ -78,46 +89,43 @@ class AppColors extends ThemeExtension<AppColors> {
     if (outro == null) return this;
     return AppColors(
       accent: Color.lerp(accent, outro.accent, t)!,
-      accentSecundaria: Color.lerp(accentSecundaria, outro.accentSecundaria, t)!,
-      gradienteMarca: [
-        for (var i = 0; i < gradienteMarca.length; i++)
-          Color.lerp(gradienteMarca[i], outro.gradienteMarca[i], t)!,
-      ],
-      gradienteSuperficie: [
-        for (var i = 0; i < gradienteSuperficie.length; i++)
-          Color.lerp(gradienteSuperficie[i], outro.gradienteSuperficie[i], t)!,
-      ],
+      accentEscuro: Color.lerp(accentEscuro, outro.accentEscuro, t)!,
+      accentSuave: Color.lerp(accentSuave, outro.accentSuave, t)!,
+      fundo: Color.lerp(fundo, outro.fundo, t)!,
+      fundoCartao: Color.lerp(fundoCartao, outro.fundoCartao, t)!,
       sucesso: Color.lerp(sucesso, outro.sucesso, t)!,
       alerta: Color.lerp(alerta, outro.alerta, t)!,
       perigo: Color.lerp(perigo, outro.perigo, t)!,
-      brilho: Color.lerp(brilho, outro.brilho, t)!,
     );
   }
 }
 
 /// Paletas de destaque oferecidas nas configurações.
 class AccentPalette {
-  const AccentPalette(this.nome, this.primaria, this.terciaria, this.secundaria);
+  const AccentPalette(this.nome, this.cor);
 
   final String nome;
-  final Color primaria;
 
-  /// Cor do meio do gradiente (dá personalidade ao conjunto).
-  final Color terciaria;
-  final Color secundaria;
+  /// Cor de destaque do app. Uma só, discreta, usada com parcimônia:
+  /// no botão principal, no item selecionado e em pequenos realces.
+  final Color cor;
 
-  List<Color> get gradiente => [primaria, terciaria, secundaria];
+  /// Versão mais escura, para passar o mouse e estados pressionados.
+  Color get escura => Color.lerp(cor, const Color(0xFF000000), 0.18)!;
+
+  /// Versão clara, para fundos suaves (nunca como degradê).
+  Color get suave => Color.lerp(cor, const Color(0xFFFFFFFF), 0.88)!;
 
   static const List<AccentPalette> todas = [
-    // A primeira da lista é a paleta padrão do aplicativo.
-    AccentPalette('Papel & Ouro', Color(0xFF92400E), Color(0xFFB45309), Color(0xFFEAB308)),
-    AccentPalette('Aurora', Color(0xFF7C3AED), Color(0xFFC026D3), Color(0xFF22D3EE)),
-    AccentPalette('Esmeralda', Color(0xFF047857), Color(0xFF10B981), Color(0xFF84CC16)),
-    AccentPalette('Cereja', Color(0xFF9F1239), Color(0xFFE11D48), Color(0xFFFB923C)),
-    AccentPalette('Petróleo', Color(0xFF0F766E), Color(0xFF0891B2), Color(0xFF38BDF8)),
-    AccentPalette('Magenta', Color(0xFFA21CAF), Color(0xFFDB2777), Color(0xFF8B5CF6)),
-    AccentPalette('Grafite & Âmbar', Color(0xFF334155), Color(0xFF475569), Color(0xFFF59E0B)),
-    AccentPalette('Uva', Color(0xFF4C1D95), Color(0xFF7C3AED), Color(0xFFEC4899)),
+    // A primeira é a padrão do aplicativo.
+    AccentPalette('Petróleo', Color(0xFF2F5D62)),
+    AccentPalette('Ardósia', Color(0xFF44546A)),
+    AccentPalette('Aço', Color(0xFF4B5563)),
+    AccentPalette('Oliva', Color(0xFF56613F)),
+    AccentPalette('Tijolo', Color(0xFF7A4A3A)),
+    AccentPalette('Ameixa', Color(0xFF5B4356)),
+    AccentPalette('Bronze', Color(0xFF7A6535)),
+    AccentPalette('Índigo', Color(0xFF3B4C7A)),
   ];
 
   static AccentPalette porIndice(int indice) =>
@@ -136,57 +144,51 @@ class AppTheme {
   static const Color _perigoEscuro = Color(0xFFF87171);
 
   static ThemeData claro({required AccentPalette paleta}) {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: paleta.primaria,
-      brightness: Brightness.light,
-    ).copyWith(surface: const Color(0xFFFBF9FF));
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: paleta.cor,
+          brightness: Brightness.light,
+        ).copyWith(
+          surface: const Color(0xFFFFFFFF),
+          onSurface: const Color(0xFF1F2430),
+        );
 
     return _base(
       scheme: scheme,
       cores: AppColors(
-        accent: paleta.primaria,
-        accentSecundaria: paleta.secundaria,
-        gradienteMarca: paleta.gradiente,
-        // O fundo também ganha um toque da paleta escolhida.
-        gradienteSuperficie: [
-          Color.lerp(Colors.white, paleta.secundaria, 0.18)!,
-          Color.lerp(Colors.white, paleta.terciaria, 0.10)!,
-          Color.lerp(Colors.white, paleta.primaria, 0.05)!,
-          Colors.white,
-        ],
+        accent: paleta.cor,
+        accentEscuro: paleta.escura,
+        accentSuave: paleta.suave,
+        fundo: const Color(0xFFF2F3F5),
+        fundoCartao: const Color(0xFFFFFFFF),
         sucesso: _sucessoClaro,
         alerta: _alertaClaro,
         perigo: _perigoClaro,
-        brilho: Colors.white,
       ),
     );
   }
 
   static ThemeData escuro({required AccentPalette paleta}) {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: paleta.primaria,
-      brightness: Brightness.dark,
-    ).copyWith(surface: const Color(0xFF120F1C));
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: paleta.cor,
+          brightness: Brightness.dark,
+        ).copyWith(
+          surface: const Color(0xFF1B1E23),
+          onSurface: const Color(0xFFE6E8EC),
+        );
 
     return _base(
       scheme: scheme,
       cores: AppColors(
-        accent: Color.lerp(paleta.primaria, Colors.white, 0.18)!,
-        accentSecundaria: paleta.secundaria,
-        gradienteMarca: [
-          Color.lerp(paleta.primaria, Colors.white, 0.14)!,
-          Color.lerp(paleta.terciaria, Colors.white, 0.08)!,
-          Color.lerp(paleta.secundaria, Colors.white, 0.04)!,
-        ],
-        gradienteSuperficie: [
-          Color.lerp(const Color(0xFF0D0B14), paleta.primaria, 0.10)!,
-          Color.lerp(const Color(0xFF100E19), paleta.terciaria, 0.07)!,
-          Color.lerp(const Color(0xFF0A0910), paleta.secundaria, 0.05)!,
-        ],
+        accent: Color.lerp(paleta.cor, Colors.white, 0.42)!,
+        accentEscuro: Color.lerp(paleta.cor, Colors.white, 0.24)!,
+        accentSuave: Color.lerp(paleta.cor, const Color(0xFF1B1E23), 0.78)!,
+        fundo: const Color(0xFF141618),
+        fundoCartao: const Color(0xFF1B1E23),
         sucesso: _sucessoEscuro,
         alerta: _alertaEscuro,
         perigo: _perigoEscuro,
-        brilho: const Color(0xFF241F38),
       ),
     );
   }
@@ -196,7 +198,7 @@ class AppTheme {
     required AppColors cores,
   }) {
     final escuro = scheme.brightness == Brightness.dark;
-    final raio = BorderRadius.circular(16);
+    final raio = BorderRadius.circular(12);
     // Os textos dos botões saem da mesma tipografia do app (e não da fonte
     // padrão do sistema, que pode ser outra).
     final textos = _textos(scheme);
@@ -210,7 +212,7 @@ class AppTheme {
       visualDensity: VisualDensity.standard,
       textTheme: textos,
       dividerTheme: DividerThemeData(
-        color: scheme.outlineVariant.withValues(alpha: escuro ? 0.35 : 0.6),
+        color: scheme.outlineVariant.withValues(alpha: escuro ? 0.30 : 0.55),
         thickness: 1,
         space: 1,
       ),
@@ -223,19 +225,19 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: escuro
-            ? scheme.surfaceContainerHigh.withValues(alpha: 0.72)
-            : Colors.white.withValues(alpha: 0.86),
+        color: cores.fundoCartao,
         shape: RoundedRectangleBorder(borderRadius: raio),
         margin: EdgeInsets.zero,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: escuro
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white.withValues(alpha: 0.75),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            ? Colors.white.withValues(alpha: 0.03)
+            : const Color(0xFFF7F8FA),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: scheme.outlineVariant),
@@ -257,9 +259,13 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
+          backgroundColor: cores.accent,
+          foregroundColor: cores.sobreAccent,
+          disabledBackgroundColor: cores.accent.withValues(alpha: 0.35),
+          disabledForegroundColor: cores.sobreAccent.withValues(alpha: 0.7),
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
           ),
           textStyle: textos.labelLarge?.copyWith(
             fontWeight: FontWeight.w600,
@@ -270,9 +276,10 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
+          foregroundColor: cores.accent,
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
           ),
           side: BorderSide(color: scheme.outlineVariant),
           textStyle: textos.labelLarge?.copyWith(fontSize: 14),
@@ -280,6 +287,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
+          foregroundColor: cores.accent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -287,7 +295,7 @@ class AppTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         side: BorderSide(color: scheme.outlineVariant),
         labelStyle: textos.labelMedium?.copyWith(fontWeight: FontWeight.w500),
       ),
@@ -327,8 +335,8 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        backgroundColor: escuro ? const Color(0xFF1B1728) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        backgroundColor: cores.fundoCartao,
       ),
       scrollbarTheme: ScrollbarThemeData(
         // Barra de rolagem sempre visível e na cor do app: é ela que garante
@@ -360,32 +368,29 @@ class AppTheme {
         ? tipografia.white
         : tipografia.black;
     return base
-        .apply(
-          bodyColor: scheme.onSurface,
-          displayColor: scheme.onSurface,
-        )
+        .apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface)
         .copyWith(
-      displaySmall: base.displaySmall?.copyWith(
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.8,
-      ),
-      headlineMedium: base.headlineMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.5,
-      ),
-      headlineSmall: base.headlineSmall?.copyWith(
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.4,
-      ),
-      titleLarge: base.titleLarge?.copyWith(
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
-      ),
-      titleMedium: base.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-      bodyMedium: base.bodyMedium?.copyWith(height: 1.45),
-      bodySmall: base.bodySmall?.copyWith(height: 1.4),
-      labelLarge: base.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-    );
+          displaySmall: base.displaySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.8,
+          ),
+          headlineMedium: base.headlineMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.5,
+          ),
+          headlineSmall: base.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.4,
+          ),
+          titleLarge: base.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.2,
+          ),
+          titleMedium: base.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          bodyMedium: base.bodyMedium?.copyWith(height: 1.45),
+          bodySmall: base.bodySmall?.copyWith(height: 1.4),
+          labelLarge: base.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+        );
   }
 }
 

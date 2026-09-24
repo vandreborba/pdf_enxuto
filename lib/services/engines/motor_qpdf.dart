@@ -36,8 +36,8 @@ class MotorQpdf extends MotorPdf {
   String get comoInstalar => Sistema.ehWindows
       ? 'Baixe em qpdf.sourceforge.io (ou use o MSYS2: pacman -S mingw-w64-x86_64-qpdf).'
       : 'Debian/Ubuntu: sudo apt install qpdf\n'
-          'Fedora: sudo dnf install qpdf\n'
-          'Arch: sudo pacman -S qpdf';
+            'Fedora: sudo dnf install qpdf\n'
+            'Arch: sudo pacman -S qpdf';
 
   @override
   String get siteOficial => 'https://qpdf.sourceforge.io/';
@@ -168,7 +168,10 @@ class MotorQpdf extends MotorPdf {
 
     for (var i = 0; i < partes.length; i++) {
       cancelamento.verificar();
-      progresso(i / math.max(1, partes.length), 'Parte ${i + 1} de ${partes.length}');
+      progresso(
+        i / math.max(1, partes.length),
+        'Parte ${i + 1} de ${partes.length}',
+      );
 
       final selecao = partes[i].map((intervalo) => intervalo.rotulo).join(',');
       final parcial = '${destinos[i]}.parcial';
@@ -182,7 +185,9 @@ class MotorQpdf extends MotorPdf {
       ], cancelamento);
 
       if (!resultado.sucesso) {
-        return ResultadoMotor.falha('Falha na parte ${i + 1}: ${resultado.erro}');
+        return ResultadoMotor.falha(
+          'Falha na parte ${i + 1}: ${resultado.erro}',
+        );
       }
       _mover(parcial, destinos[i]);
     }
@@ -229,8 +234,10 @@ class MotorQpdf extends MotorPdf {
       }
       return const ResultadoMotor.ok();
     } on ProcessException catch (erro) {
-      return ResultadoMotor.falha('Não foi possível executar o qpdf',
-          detalhe: '$erro');
+      return ResultadoMotor.falha(
+        'Não foi possível executar o qpdf',
+        detalhe: '$erro',
+      );
     }
   }
 

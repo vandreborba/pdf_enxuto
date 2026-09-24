@@ -17,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:pdf_enxuto/app.dart';
 import 'package:pdf_enxuto/models/app_settings.dart';
+import 'package:pdf_enxuto/models/compression_options.dart';
 import 'package:pdf_enxuto/models/pdf_file_info.dart';
 import 'package:pdf_enxuto/models/task_models.dart';
 import 'package:pdf_enxuto/screens/tela_principal.dart';
@@ -255,6 +256,24 @@ void main() {
       estado,
       'tela-configuracoes',
       secao: SecaoApp.configuracoes,
+    );
+  });
+
+  testWidgets('captura: tamanho alvo ligado', (tester) async {
+    final estado = await prepararEstado(tester);
+    await estado.atualizarCompressao(
+      estado.opcoesCompressao.copyWith(
+        modo: CompressionMode.porTamanho,
+        targetBytes: 5 * 1024 * 1024,
+      ),
+    );
+    // Janela alta de propósito: a coluna de opções é longa e a captura
+    // serve para documentar como o alvo interage com o perfil.
+    await capturar(
+      tester,
+      estado,
+      'tela-tamanho-alvo',
+      tamanho: const Size(1460, 1500),
     );
   });
 

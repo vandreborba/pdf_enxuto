@@ -57,9 +57,10 @@ class PaginaHistorico extends StatelessWidget {
               _CartaoEstatistica(
                 titulo: S.taxaMedia,
                 valor: (historico.reducaoMedia * 1000).round(),
-                formatador: (valor) => '${(valor / 10).toStringAsFixed(1).replaceAll('.', ',')}%',
+                formatador: (valor) =>
+                    '${(valor / 10).toStringAsFixed(1).replaceAll('.', ',')}%',
                 icone: Icons.trending_down_rounded,
-                cor: context.cores.accentSecundaria,
+                cor: context.cores.accentEscuro,
               ),
               _CartaoEstatistica(
                 titulo: 'Partes geradas',
@@ -108,10 +109,9 @@ class PaginaHistorico extends StatelessWidget {
           child: Text(
             S.privacidadeTexto,
             textAlign: TextAlign.center,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: esquema.onSurfaceVariant),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: esquema.onSurfaceVariant),
           ),
         ),
         const SizedBox(height: 40),

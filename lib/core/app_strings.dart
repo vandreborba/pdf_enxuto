@@ -119,7 +119,28 @@ class S {
   static const simulacaoExplicacao =
       'A simulação comprime apenas a primeira página para estimar o resultado '
       'sem esperar pelo arquivo inteiro. O tamanho final pode variar.';
+  static const comoComprimir = 'Como comprimir';
+  static const perfisAjuda =
+      'Escolha um perfil e o app comprime uma vez, exatamente nessa qualidade. '
+      'Quer mirar um tamanho? Use a aba "Tamanho alvo".';
   static const presets = 'Perfis prontos';
+  static const presetsOrdem = 'Qualidade da compressão';
+  static const presetsComAlvo = 'Qualidade de partida';
+  static const presetsComAlvoAviso =
+      'Com o tamanho alvo ligado, o perfil vira o ponto de partida: o app '
+      'começa nele e só desce até o piso de qualidade que você definir.';
+  static const faixaDoAlvo = 'Faixa da busca';
+  static const faixaDoAlvoTexto = 'de %s até %s';
+  static const alvoDonoDaQualidade =
+      'No modo tamanho alvo o perfil não é usado: a busca começa na melhor '
+      'qualidade e desce (resolução e JPEG) até caber no alvo ou até o piso.';
+  static const avancadasNoAlvo =
+      'Resolução e qualidade JPEG são decididas pela busca do alvo — os '
+      'controles manuais ficam disponíveis no modo "por perfil de qualidade".';
+  static const alvoSemAjuste =
+      'O motor escolhido não tem o que ajustar para perseguir o alvo: ele faz '
+      'uma passada e informa o tamanho obtido. Para mirar um tamanho, use o '
+      'Ghostscript ou o modo "vira imagem" (que ajusta resolução e JPEG).';
   static const presetLeve = 'Leve';
   static const presetEquilibrado = 'Equilibrado';
   static const presetForte = 'Forte';
@@ -202,7 +223,6 @@ class S {
   static const animacoesReduzidasDica =
       'Deixa as transições instantâneas. Útil em máquinas mais lentas.';
   static const comportamento = 'Comportamento';
-  static const confirmarSaida = 'Pedir confirmação antes de fechar';
   static const abrirPastaAoTerminar = 'Abrir a pasta ao terminar';
   static const notificarAoTerminar = 'Avisar quando terminar';
   static const sobrescrever = 'Sobrescrever arquivos existentes';
@@ -257,10 +277,8 @@ class S {
       'vai direto para o e-mail do desenvolvedor.';
   static const relatarProblemaAba = 'Problema';
   static const relatarRecursoAba = 'Ideia de recurso';
-  static const relatarDescricaoProblema =
-      'Descreva o problema';
-  static const relatarDescricaoRecurso =
-      'Descreva a ideia';
+  static const relatarDescricaoProblema = 'Descreva o problema';
+  static const relatarDescricaoRecurso = 'Descreva a ideia';
   static const relatarDicaProblema =
       'Conte o que você fez, o que esperava e o que aconteceu. Se puder, diga '
       'qual arquivo (tipo e tamanho) e qual motor estava em uso.';
@@ -281,7 +299,8 @@ class S {
   static const relatarViaGitHub = 'Prefere o GitHub? Abra uma issue';
   static const verNovidades = 'Ver novidades';
   static const licenca = 'Licença';
-  static const feitoCom = 'Feito com Flutter. Sem nuvem, sem contas, sem espiar.';
+  static const feitoCom =
+      'Feito com Flutter. Sem nuvem, sem contas, sem espiar.';
   static const privacidade = 'Privacidade';
   static const privacidadeTexto =
       'Nenhum documento é enviado para lugar nenhum. A única conexão de rede '
@@ -325,6 +344,30 @@ class Ajuda {
       '• Forte: reduz bastante; textos pequenos podem ficar um pouco borrados.\n'
       '• Extremo: o menor arquivo possível; use quando o tamanho importa mais que a nitidez.\n\n'
       'Todos os níveis preservam o texto selecionável quando o motor escolhido consegue fazer isso.';
+
+  static const modoCompressao =
+      'Escolha como quer decidir a compressão. São dois caminhos separados, '
+      'para não misturar as coisas:\n\n'
+      '• Por perfil de qualidade: você escolhe Leve, Equilibrado, Forte ou '
+      'Extremo e o app comprime uma vez, exatamente naquela qualidade. Bom '
+      'quando você quer previsibilidade e não liga para o tamanho exato.\n\n'
+      '• Por tamanho alvo: você diz o tamanho que precisa (por arquivo ou '
+      'somando todos) e o app procura a melhor qualidade que caiba, descendo '
+      'resolução e JPEG até atingir — sem passar do piso de qualidade. Bom '
+      'quando o tamanho é o que importa, como anexo de e-mail.\n\n'
+      'Nenhum dos dois modos mexe no conteúdo além do que você permitir nas '
+      'opções avançadas.';
+
+  static const presetsExplicacao =
+      'Os perfis definem a qualidade da compressão.\n\n'
+      'Sem tamanho alvo: o app usa exatamente o perfil escolhido, uma vez só.\n\n'
+      'Com tamanho alvo: o perfil passa a ser o ponto de partida (a melhor '
+      'qualidade que o app vai tentar) e ele desce a partir dali — resolução e '
+      'JPEG — até caber no tamanho pedido, sem passar do piso de qualidade.\n\n'
+      'Exemplo: perfil Equilibrado (150 dpi, JPEG 82) com alvo de 5 MB. O app '
+      'tenta 150 dpi; se não couber, tenta 130, 115, 100… até caber ou até o '
+      'piso. Ou seja: o perfil continua importando — ele decide onde a busca '
+      'começa e quanto ela pode descer.';
 
   static const tamanhoAlvo =
       'Em vez de escolher um nível "no escuro", você diz o tamanho que precisa '

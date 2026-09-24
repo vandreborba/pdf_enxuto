@@ -60,6 +60,9 @@ class SeletorSegmentado<T> extends StatelessWidget {
             ),
           ),
           child: Stack(
+            // Sem isto os rótulos ficam colados no topo, desalinhados da
+            // "pílula" que marca a opção escolhida.
+            alignment: Alignment.center,
             children: [
               AnimatedPositioned(
                 duration: duracao,
@@ -70,15 +73,8 @@ class SeletorSegmentado<T> extends StatelessWidget {
                 width: larguraItem - 6,
                 child: Container(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: cores.gradienteMarca),
-                    borderRadius: BorderRadius.circular(11),
-                    boxShadow: [
-                      BoxShadow(
-                        color: cores.accent.withValues(alpha: 0.32),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    color: cores.accent,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ),
@@ -116,6 +112,7 @@ class _ItemSegmento<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final esquema = Theme.of(context).colorScheme;
+    final cores = context.cores;
 
     return Semantics(
       selected: selecionado,
@@ -132,7 +129,9 @@ class _ItemSegmento<T> extends StatelessWidget {
                 .copyWith(
                   fontSize: 13.5,
                   fontWeight: selecionado ? FontWeight.w700 : FontWeight.w500,
-                  color: selecionado ? Colors.white : esquema.onSurfaceVariant,
+                  color: selecionado
+                      ? cores.sobreAccent
+                      : esquema.onSurfaceVariant,
                 ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -142,7 +141,7 @@ class _ItemSegmento<T> extends StatelessWidget {
                     opcao.icone,
                     size: 16,
                     color: selecionado
-                        ? Colors.white
+                        ? cores.sobreAccent
                         : esquema.onSurfaceVariant,
                   ),
                   const SizedBox(width: 7),
@@ -231,25 +230,17 @@ class _CartaoPerfil<T> extends StatelessWidget {
         curve: Motion.entrada,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          gradient: selecionado
-              ? LinearGradient(
-                  colors: [
-                    cores.accent.withValues(alpha: 0.20),
-                    cores.accentSecundaria.withValues(alpha: 0.12),
-                  ],
-                )
-              : null,
           color: selecionado
-              ? null
+              ? cores.accent.withValues(alpha: 0.06)
               : (escuro
-                  ? Colors.white.withValues(alpha: 0.04)
-                  : Colors.black.withValues(alpha: 0.03)),
-          borderRadius: BorderRadius.circular(18),
+                    ? Colors.white.withValues(alpha: 0.03)
+                    : Colors.black.withValues(alpha: 0.02)),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selecionado
                 ? cores.accent
-                : esquema.outlineVariant.withValues(alpha: 0.5),
-            width: selecionado ? 2 : 1,
+                : esquema.outlineVariant.withValues(alpha: 0.55),
+            width: selecionado ? 1.6 : 1,
           ),
         ),
         child: Column(
@@ -262,7 +253,9 @@ class _CartaoPerfil<T> extends StatelessWidget {
                   Icon(
                     opcao.icone,
                     size: 19,
-                    color: selecionado ? cores.accent : esquema.onSurfaceVariant,
+                    color: selecionado
+                        ? cores.accent
+                        : esquema.onSurfaceVariant,
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -293,9 +286,9 @@ class _CartaoPerfil<T> extends StatelessWidget {
               Text(
                 opcao.descricao!,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: esquema.onSurfaceVariant,
-                      height: 1.3,
-                    ),
+                  color: esquema.onSurfaceVariant,
+                  height: 1.3,
+                ),
               ),
             ],
           ],
@@ -349,7 +342,10 @@ class _CampoTamanhoState extends State<CampoTamanho> {
     }
     if (bytes >= 1024 * 1024) {
       final valor = bytes / (1024 * 1024);
-      return (valor >= 10 ? valor.round().toString() : valor.toStringAsFixed(1), 'MB');
+      return (
+        valor >= 10 ? valor.round().toString() : valor.toStringAsFixed(1),
+        'MB',
+      );
     }
     return ((bytes / 1024).round().toString(), 'KB');
   }
@@ -382,7 +378,9 @@ class _CampoTamanhoState extends State<CampoTamanho> {
             Expanded(
               child: TextField(
                 controller: _controlador,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                 ],
@@ -416,10 +414,7 @@ class _CampoTamanhoState extends State<CampoTamanho> {
               const SizedBox(width: 8),
               Padding(
                 padding: const EdgeInsets.only(top: 10),
-                child: BotaoAjuda(
-                  titulo: widget.rotulo,
-                  texto: widget.ajuda!,
-                ),
+                child: BotaoAjuda(titulo: widget.rotulo, texto: widget.ajuda!),
               ),
             ],
           ],
@@ -454,10 +449,9 @@ class _CampoTamanhoState extends State<CampoTamanho> {
         const SizedBox(height: 8),
         Text(
           'Valor atual: ${Fmt.bytes(widget.bytes)}',
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: esquema.onSurfaceVariant),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: esquema.onSurfaceVariant),
         ),
       ],
     );
@@ -539,8 +533,9 @@ class CampoIntervalos extends StatefulWidget {
 }
 
 class _CampoIntervalosState extends State<CampoIntervalos> {
-  late final TextEditingController _controlador =
-      TextEditingController(text: widget.valor);
+  late final TextEditingController _controlador = TextEditingController(
+    text: widget.valor,
+  );
 
   @override
   void didUpdateWidget(covariant CampoIntervalos antigo) {
@@ -620,7 +615,12 @@ class _CampoIntervalosState extends State<CampoIntervalos> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            for (final exemplo in const ['1-3, 7, 10-12', '1-', '-5', '2, 4, 6'])
+            for (final exemplo in const [
+              '1-3, 7, 10-12',
+              '1-',
+              '-5',
+              '2, 4, 6',
+            ])
               AtalhoTexto(
                 rotulo: exemplo,
                 selecionado: widget.valor.trim() == exemplo,
@@ -639,10 +639,9 @@ class _CampoIntervalosState extends State<CampoIntervalos> {
             padding: const EdgeInsets.only(top: 8),
             child: Text(
               'Digite os intervalos ou use um exemplo acima.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: esquema.onSurfaceVariant),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: esquema.onSurfaceVariant),
             ),
           ),
       ],
@@ -712,19 +711,15 @@ class LinhaOpcao extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
                           descricao!,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: esquema.onSurfaceVariant,
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: esquema.onSurfaceVariant),
                         ),
                       ),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
-              Switch(
-                value: valor,
-                onChanged: desabilitado ? null : onMudar,
-              ),
+              Switch(value: valor, onChanged: desabilitado ? null : onMudar),
             ],
           ),
         ),
@@ -804,10 +799,9 @@ class LinhaSlider extends StatelessWidget {
             padding: const EdgeInsets.only(top: 2),
             child: Text(
               descricao!,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: esquema.onSurfaceVariant),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: esquema.onSurfaceVariant),
             ),
           ),
         Slider(

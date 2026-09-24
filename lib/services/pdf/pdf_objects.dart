@@ -192,7 +192,8 @@ class PdfDict extends PdfObject {
   }
 
   @override
-  String toString() => '<<${entries.entries.map((e) => '/${e.key} ${e.value}').join(' ')}>>';
+  String toString() =>
+      '<<${entries.entries.map((e) => '/${e.key} ${e.value}').join(' ')}>>';
 }
 
 /// Dicionário + fluxo de bytes crus (ainda codificados, como no arquivo).
@@ -240,12 +241,18 @@ class PdfRef extends PdfObject {
 extension PdfDictExt on PdfDict {
   /// Nome em `chave`, seguindo uma referência se necessário (o resolvedor é
   /// fornecido pelo leitor).
-  String? nomeResolvido(String chave, PdfObject? Function(PdfObject?) resolver) {
+  String? nomeResolvido(
+    String chave,
+    PdfObject? Function(PdfObject?) resolver,
+  ) {
     final objeto = resolver(entries[chave]);
     return objeto is PdfName ? objeto.value : null;
   }
 
-  int? inteiroResolvido(String chave, PdfObject? Function(PdfObject?) resolver) {
+  int? inteiroResolvido(
+    String chave,
+    PdfObject? Function(PdfObject?) resolver,
+  ) {
     final objeto = resolver(entries[chave]);
     return objeto is PdfNumber ? objeto.comoInteiro : null;
   }

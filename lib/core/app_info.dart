@@ -8,7 +8,8 @@ class AppInfo {
 
   static const String appName = 'PDF Enxuto';
   static const String appId = 'pdf-enxuto';
-  static const String tagline = 'Comprima e divida PDFs sem sair do seu computador';
+  static const String tagline =
+      'Comprima e divida PDFs sem sair do seu computador';
   static const String description =
       'Compressor e divisor de PDF 100% local. Nenhum arquivo sai do seu '
       'computador: tudo é processado na sua máquina, sem conta, sem nuvem e '

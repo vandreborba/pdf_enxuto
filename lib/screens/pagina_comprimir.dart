@@ -292,18 +292,52 @@ class _ColunaOpcoes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final motores = estado.motores;
-    final previsto = motores.motorPrevisto(opcoes);
-    final avisos = motores.avisosDaEscolha(opcoes);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Um cartão só, com duas abas: ou o perfil, ou o tamanho alvo.
+        CartaoSecao(
+          titulo: S.comoComprimir,
+          icone: Icons.tune_rounded,
+          ajuda: Ajuda.modoCompressao,
+          atraso: const Duration(milliseconds: 40),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SeletorSegmentado<CompressionMode>(
+                valor: opcoes.modo,
+                onMudar: (valor) => _mudar(opcoes.copyWith(modo: valor)),
+                opcoes: [
+                  OpcaoSegmento(
+                    valor: CompressionMode.porPerfil,
+                    rotulo: S.presets,
+                    icone: Icons.tune_rounded,
+                    descricao: CompressionMode.porPerfil.descricao,
+                  ),
+                  OpcaoSegmento(
+                    valor: CompressionMode.porTamanho,
+                    rotulo: S.tamanhoAlvo,
+                    icone: Icons.flag_outlined,
+                    descricao: CompressionMode.porTamanho.descricao,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _NotaExplicativa(texto: opcoes.modo.descricao),
+              const SizedBox(height: 18),
+              if (opcoes.modo == CompressionMode.porPerfil)
+                AbaPerfis(opcoes: opcoes, onMudar: _mudar)
+              else
+                AbaAlvo(opcoes: opcoes, estado: estado, onMudar: _mudar),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
         CartaoSecao(
           titulo: S.modoTexto,
           icone: Icons.text_fields_rounded,
           ajuda: Ajuda.modoTexto,
-          atraso: const Duration(milliseconds: 40),
+          atraso: const Duration(milliseconds: 80),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -363,177 +397,151 @@ class _ColunaOpcoes extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        CartaoSecao(
-          titulo: S.presets,
-          icone: Icons.tune_rounded,
-          ajuda: Ajuda.nivelCompressao,
-          atraso: const Duration(milliseconds: 80),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CartoesPerfil<CompressionPreset>(
-                valor: opcoes.preset,
-                onMudar: (valor) => _mudar(opcoes.comPreset(valor)),
-                opcoes: [
-                  for (final preset in CompressionPreset.values)
-                    OpcaoSegmento(
-                      valor: preset,
-                      rotulo: preset.rotulo,
-                      descricao: preset.resumo,
-                      icone: switch (preset) {
-                        CompressionPreset.leve => Icons.spa_outlined,
-                        CompressionPreset.equilibrado => Icons.balance_rounded,
-                        CompressionPreset.forte => Icons.bolt_rounded,
-                        CompressionPreset.extremo => Icons.compress_rounded,
-                        CompressionPreset.personalizado => Icons.tune_rounded,
-                      },
-                    ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  Etiqueta(
-                    texto: '${opcoes.dpi} dpi',
-                    icone: Icons.straighten_rounded,
-                    compacta: true,
-                  ),
-                  Etiqueta(
-                    texto: 'JPEG ${opcoes.jpegQuality}',
-                    icone: Icons.photo_size_select_large_rounded,
-                    compacta: true,
-                  ),
-                  Etiqueta(
-                    texto: opcoes.colorMode.rotulo,
-                    icone: Icons.palette_outlined,
-                    compacta: true,
-                  ),
-                  Etiqueta(
-                    texto: 'motor: ${previsto.nome}',
-                    icone: Icons.memory_rounded,
-                    cor: context.cores.accent,
-                    compacta: true,
-                  ),
-                ],
-              ),
-              if (avisos.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                for (final aviso in avisos)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.info_outline_rounded,
-                          size: 15,
-                          color: context.cores.alerta,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            aviso,
-                            style: TextStyle(
-                              fontSize: 12,
-                              height: 1.35,
-                              color: context.cores.alerta,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        CartaoSecao(
-          titulo: S.tamanhoAlvo,
-          icone: Icons.flag_outlined,
-          ajuda: Ajuda.tamanhoAlvo,
-          atraso: const Duration(milliseconds: 120),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              LinhaOpcao(
-                titulo: S.tamanhoAlvoAtivar,
-                descricao: S.tamanhoAlvoDica,
-                valor: opcoes.targetEnabled,
-                onMudar: (valor) =>
-                    _mudar(opcoes.copyWith(targetEnabled: valor)),
-              ),
-              Aparecer(
-                visivel: opcoes.targetEnabled,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CampoTamanho(
-                        bytes: opcoes.targetBytes,
-                        rotulo: S.tamanhoAlvo,
-                        ajuda: Ajuda.tamanhoAlvo,
-                        onMudar: (bytes) =>
-                            _mudar(opcoes.copyWith(targetBytes: bytes)),
-                      ),
-                      const SizedBox(height: 14),
-                      if (estado.itensValidos.length > 1) ...[
-                        SeletorSegmentado<TargetScope>(
-                          valor: opcoes.targetScope,
-                          onMudar: (valor) =>
-                              _mudar(opcoes.copyWith(targetScope: valor)),
-                          opcoes: const [
-                            OpcaoSegmento(
-                              valor: TargetScope.porArquivo,
-                              rotulo: S.tamanhoAlvoPorArquivo,
-                              icone: Icons.description_outlined,
-                            ),
-                            OpcaoSegmento(
-                              valor: TargetScope.total,
-                              rotulo: S.tamanhoAlvoTotal,
-                              icone: Icons.stacked_bar_chart_rounded,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          opcoes.targetScope == TargetScope.total
-                              ? 'Cada arquivo recebe uma cota '
-                                    'proporcional ao tamanho dele.'
-                              : 'Todos os arquivos tentam caber no '
-                                    'mesmo limite.',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                      const SizedBox(height: 12),
-                      LinhaSlider(
-                        titulo: S.qualidadeMinima,
-                        descricao:
-                            'O quanto o app pode piorar a qualidade '
-                            'para caber no alvo.',
-                        valor: opcoes.qualidadeMinima,
-                        minimo: 0,
-                        maximo: 1,
-                        ajuda:
-                            '0% aceita degradar bastante; 100% nunca '
-                            'passa da qualidade do perfil escolhido '
-                            '(e pode não atingir o alvo).',
-                        formatar: (valor) => '${(valor * 100).round()}%',
-                        onMudar: (valor) =>
-                            _mudar(opcoes.copyWith(qualidadeMinima: valor)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
         _Avancadas(estado: estado, opcoes: opcoes, onMudar: _mudar),
+      ],
+    );
+  }
+}
+
+/// Aba "Perfis prontos": a qualidade escolhida de antemão.
+class AbaPerfis extends StatelessWidget {
+  const AbaPerfis({super.key, required this.opcoes, required this.onMudar});
+
+  final CompressionOptions opcoes;
+  final Future<void> Function(CompressionOptions) onMudar;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CartoesPerfil<CompressionPreset>(
+          valor: opcoes.preset,
+          onMudar: (valor) => onMudar(opcoes.comPreset(valor)),
+          opcoes: [
+            for (final preset in CompressionPreset.values)
+              OpcaoSegmento(
+                valor: preset,
+                rotulo: preset.rotulo,
+                descricao: preset.resumo,
+                icone: switch (preset) {
+                  CompressionPreset.leve => Icons.spa_outlined,
+                  CompressionPreset.equilibrado => Icons.balance_rounded,
+                  CompressionPreset.forte => Icons.bolt_rounded,
+                  CompressionPreset.extremo => Icons.compress_rounded,
+                  CompressionPreset.personalizado => Icons.tune_rounded,
+                },
+              ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            Etiqueta(
+              texto: '${opcoes.dpi} dpi',
+              icone: Icons.straighten_rounded,
+              compacta: true,
+            ),
+            Etiqueta(
+              texto: 'JPEG ${opcoes.jpegQuality}',
+              icone: Icons.photo_size_select_large_rounded,
+              compacta: true,
+            ),
+            if (opcoes.colorMode != ColorMode.manter)
+              Etiqueta(
+                texto: opcoes.colorMode.rotulo,
+                icone: Icons.palette_outlined,
+                compacta: true,
+              ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(S.perfisAjuda, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+}
+
+/// Aba "Tamanho alvo": o tamanho desejado e o piso de qualidade.
+class AbaAlvo extends StatelessWidget {
+  const AbaAlvo({
+    super.key,
+    required this.opcoes,
+    required this.estado,
+    required this.onMudar,
+  });
+
+  final CompressionOptions opcoes;
+  final AppState estado;
+  final Future<void> Function(CompressionOptions) onMudar;
+
+  @override
+  Widget build(BuildContext context) {
+    final motores = estado.motores;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(S.tamanhoAlvoDica, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 12),
+        CampoTamanho(
+          bytes: opcoes.targetBytes,
+          rotulo: S.tamanhoAlvo,
+          ajuda: Ajuda.tamanhoAlvo,
+          onMudar: (bytes) => onMudar(opcoes.copyWith(targetBytes: bytes)),
+        ),
+        const SizedBox(height: 14),
+        if (estado.itensValidos.length > 1) ...[
+          SeletorSegmentado<TargetScope>(
+            valor: opcoes.targetScope,
+            onMudar: (valor) => onMudar(opcoes.copyWith(targetScope: valor)),
+            opcoes: const [
+              OpcaoSegmento(
+                valor: TargetScope.porArquivo,
+                rotulo: S.tamanhoAlvoPorArquivo,
+                icone: Icons.description_outlined,
+              ),
+              OpcaoSegmento(
+                valor: TargetScope.total,
+                rotulo: S.tamanhoAlvoTotal,
+                icone: Icons.stacked_bar_chart_rounded,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            opcoes.targetScope == TargetScope.total
+                ? 'Cada arquivo recebe uma cota proporcional ao tamanho dele.'
+                : 'Todos os arquivos tentam caber no mesmo limite.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 14),
+        ],
+        _FaixaDaBusca(opcoes: opcoes),
+        if (!motores.permiteBuscaDeAlvo(opcoes)) ...[
+          const SizedBox(height: 10),
+          _NotaExplicativa(
+            texto: S.alvoSemAjuste,
+            cor: context.cores.alerta,
+            icone: Icons.warning_amber_rounded,
+          ),
+        ],
+        const SizedBox(height: 12),
+        LinhaSlider(
+          titulo: S.qualidadeMinima,
+          descricao:
+              'O quanto a qualidade pode cair na busca para caber no alvo.',
+          valor: opcoes.qualidadeMinima,
+          minimo: 0,
+          maximo: 1,
+          ajuda:
+              '0% deixa a busca descer bastante (até 72 dpi / JPEG 30); 100% '
+              'mantém a qualidade do começo e pode não atingir o alvo.',
+          formatar: (valor) => '${(valor * 100).round()}%',
+          onMudar: (valor) => onMudar(opcoes.copyWith(qualidadeMinima: valor)),
+        ),
       ],
     );
   }
@@ -619,30 +627,36 @@ class _Avancadas extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 18),
-                  LinhaSlider(
-                    titulo: S.resolucao,
-                    valor: opcoes.dpi.toDouble(),
-                    minimo: 60,
-                    maximo: 400,
-                    ajuda: Ajuda.resolucao,
-                    formatar: (valor) => '${valor.round()} dpi',
-                    onMudar: (valor) => onMudar(
-                      opcoes.copyWith(dpi: valor.round()).personalizado(),
+                  // No modo "por tamanho alvo" quem decide resolução e JPEG é
+                  // a busca — os controles manuais só aparecem no modo perfil.
+                  if (opcoes.targetEnabled)
+                    _NotaExplicativa(texto: S.avancadasNoAlvo)
+                  else ...[
+                    LinhaSlider(
+                      titulo: S.resolucao,
+                      valor: opcoes.dpi.toDouble(),
+                      minimo: 60,
+                      maximo: 400,
+                      ajuda: Ajuda.resolucao,
+                      formatar: (valor) => '${valor.round()} dpi',
+                      onMudar: (valor) => onMudar(
+                        opcoes.copyWith(dpi: valor.round()).personalizado(),
+                      ),
                     ),
-                  ),
-                  LinhaSlider(
-                    titulo: S.qualidadeJpeg,
-                    valor: opcoes.jpegQuality.toDouble(),
-                    minimo: 20,
-                    maximo: 100,
-                    ajuda: Ajuda.qualidadeJpeg,
-                    formatar: (valor) => '${valor.round()}',
-                    onMudar: (valor) => onMudar(
-                      opcoes
-                          .copyWith(jpegQuality: valor.round())
-                          .personalizado(),
+                    LinhaSlider(
+                      titulo: S.qualidadeJpeg,
+                      valor: opcoes.jpegQuality.toDouble(),
+                      minimo: 20,
+                      maximo: 100,
+                      ajuda: Ajuda.qualidadeJpeg,
+                      formatar: (valor) => '${valor.round()}',
+                      onMudar: (valor) => onMudar(
+                        opcoes
+                            .copyWith(jpegQuality: valor.round())
+                            .personalizado(),
+                      ),
                     ),
-                  ),
+                  ],
                   const SizedBox(height: 6),
                   Row(
                     children: [
@@ -912,4 +926,126 @@ Future<void> mostrarComoInstalar(
       onProcurarNovamente: estado.procurarMotoresNovamente,
     ),
   );
+}
+
+/// Nota curta dentro de um cartão (explicação ou aviso).
+class _NotaExplicativa extends StatelessWidget {
+  const _NotaExplicativa({
+    required this.texto,
+    this.cor,
+    this.icone = Icons.info_outline_rounded,
+  });
+
+  final String texto;
+  final Color? cor;
+  final IconData icone;
+
+  @override
+  Widget build(BuildContext context) {
+    final corFinal = cor ?? context.cores.accent;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: corFinal.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: corFinal.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icone, size: 16, color: corFinal),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              texto,
+              style: TextStyle(fontSize: 12.5, height: 1.45, color: corFinal),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Mostra de onde até onde a busca pelo tamanho alvo pode ir.
+class _FaixaDaBusca extends StatelessWidget {
+  const _FaixaDaBusca({required this.opcoes});
+
+  final CompressionOptions opcoes;
+
+  @override
+  Widget build(BuildContext context) {
+    final esquema = Theme.of(context).colorScheme;
+    final cores = context.cores;
+    // A faixa começa sempre na melhor qualidade do modo alvo — não no perfil,
+    // que nesse modo não é usado.
+    final faixa = opcoes
+        .partidaDaBusca(rasterizando: opcoes.textMode == TextMode.rasterizar)
+        .faixaDoAlvo;
+    final comeca = '${faixa.dpiInicial} dpi / JPEG ${faixa.jpegInicial}';
+    final termina = '${faixa.dpiFinal} dpi / JPEG ${faixa.jpegFinal}';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              S.faixaDoAlvo,
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 4),
+            BotaoAjuda(titulo: S.faixaDoAlvo, texto: Ajuda.tamanhoAlvo),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            _EtiquetaFaixa(texto: comeca, cor: cores.accent),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Icon(
+                Icons.arrow_forward_rounded,
+                size: 15,
+                color: esquema.onSurfaceVariant,
+              ),
+            ),
+            _EtiquetaFaixa(texto: termina, cor: esquema.onSurfaceVariant),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'O app para no primeiro degrau que couber no alvo.',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
+}
+
+class _EtiquetaFaixa extends StatelessWidget {
+  const _EtiquetaFaixa({required this.texto, required this.cor});
+
+  final String texto;
+  final Color cor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: cor.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: cor.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        texto,
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cor),
+      ),
+    );
+  }
 }

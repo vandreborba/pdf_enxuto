@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:pdf_enxuto/core/app_strings.dart';
 import 'package:pdf_enxuto/core/cancelamento.dart';
+import 'package:pdf_enxuto/core/sistema.dart';
 import 'package:pdf_enxuto/models/compression_options.dart';
 import 'package:pdf_enxuto/models/page_range.dart';
 import 'package:pdf_enxuto/models/pdf_file_info.dart';
@@ -77,7 +78,9 @@ class ServicoDivisao {
               [intervalo],
         ];
         if (opcoes.umArquivoSo && grupos.isNotEmpty) {
-          grupos = [PageRangeParser.normalizar(grupos.expand((g) => g).toList())];
+          grupos = [
+            PageRangeParser.normalizar(grupos.expand((g) => g).toList()),
+          ];
         }
 
         final cobertas = <int>{
@@ -89,12 +92,17 @@ class ServicoDivisao {
         }
 
       case SplitMethod.cadaN:
-        final porParte = opcoes.umaPaginaPorArquivo ? 1 : opcoes.paginasPorParte;
+        final porParte = opcoes.umaPaginaPorArquivo
+            ? 1
+            : opcoes.paginasPorParte;
         if (porParte < 1) {
           erros.add('Informe quantas páginas cada parte deve ter');
         } else {
           grupos = [
-            for (final intervalo in PageRangeParser.cadaNPaginas(total, porParte))
+            for (final intervalo in PageRangeParser.cadaNPaginas(
+              total,
+              porParte,
+            ))
               [intervalo],
           ];
         }
@@ -127,10 +135,9 @@ class ServicoDivisao {
           erros.add(S.marcadoresVazio);
         } else {
           // Só os marcadores de primeiro nível viram cortes.
-          final capitulos = marcadores
-              .where((marcador) => marcador.nivel == 0)
-              .toList()
-            ..sort((a, b) => a.pagina.compareTo(b.pagina));
+          final capitulos =
+              marcadores.where((marcador) => marcador.nivel == 0).toList()
+                ..sort((a, b) => a.pagina.compareTo(b.pagina));
           final usados = capitulos.isEmpty ? marcadores : capitulos;
 
           for (var i = 0; i < usados.length; i++) {
@@ -157,8 +164,10 @@ class ServicoDivisao {
       final grupo = grupos[i];
       if (grupo.isEmpty) continue;
       final paginas = PageRangeParser.normalizar(grupo);
-      final quantidade =
-          paginas.fold(0, (soma, intervalo) => soma + intervalo.quantidade);
+      final quantidade = paginas.fold(
+        0,
+        (soma, intervalo) => soma + intervalo.quantidade,
+      );
       if (quantidade == 0) continue;
       partes.add(contexto.montar(i + 1, paginas));
     }
@@ -208,7 +217,9 @@ class ServicoDivisao {
     required bool sobrescrever,
   }) async {
     final inicio = DateTime.now();
-    final temporaria = await Directory.systemTemp.createTemp('pdf_enxuto_div_');
+    final temporaria = await Future.value(
+      Sistema.criarPastaTemporaria('divisao_'),
+    );
 
     try {
       final motor = _motorParaDividir();
@@ -219,7 +230,9 @@ class ServicoDivisao {
         padrao: _padraoEfetivo(opcoes),
         bytesPorPagina: arquivo.bytesPorPagina,
       );
-      final limite = opcoes.metodo == SplitMethod.porTamanho ? opcoes.maxBytes : null;
+      final limite = opcoes.metodo == SplitMethod.porTamanho
+          ? opcoes.maxBytes
+          : null;
       final avisos = <String>[...plano.avisos];
 
       List<String>? destinosFinais;
@@ -417,8 +430,10 @@ class _ContextoNomesImpl {
   final double bytesPorPagina;
 
   SplitPart montar(int indice, List<PageRange> intervalos) {
-    final paginas =
-        intervalos.fold(0, (soma, intervalo) => soma + intervalo.quantidade);
+    final paginas = intervalos.fold(
+      0,
+      (soma, intervalo) => soma + intervalo.quantidade,
+    );
     final nome = ServicoArquivos.nomeDaParte(
       padrao: padrao,
       nomeBase: nomeBase,

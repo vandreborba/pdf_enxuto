@@ -46,7 +46,11 @@ class BarraTitulo extends StatelessWidget {
           const SizedBox(width: 10),
           Padding(
             padding: const EdgeInsets.only(right: 10),
-            child: Image.asset('assets/icons/icon_24.png', width: 22, height: 22),
+            child: Image.asset(
+              'assets/icons/icon_24.png',
+              width: 22,
+              height: 22,
+            ),
           ),
           Expanded(
             child: DragToMoveArea(
@@ -72,8 +76,9 @@ class BarraTitulo extends StatelessWidget {
                           height: 4,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color:
-                                esquema.onSurfaceVariant.withValues(alpha: 0.5),
+                            color: esquema.onSurfaceVariant.withValues(
+                              alpha: 0.5,
+                            ),
                           ),
                         ),
                       ),
@@ -118,7 +123,8 @@ class BarraTitulo extends StatelessWidget {
             padding: const EdgeInsets.only(left: 2, right: 10),
             child: IconButton(
               tooltip: 'Como usar o app',
-              onPressed: () => mostrarAjuda(context, 'Barra da janela', Ajuda.tituloJanela),
+              onPressed: () =>
+                  mostrarAjuda(context, 'Barra da janela', Ajuda.tituloJanela),
               icon: Icon(
                 Icons.question_mark_rounded,
                 size: 15,

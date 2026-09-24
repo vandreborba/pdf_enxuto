@@ -34,7 +34,10 @@ class Sistema {
 
       if (ehWindows) {
         if (arquivo.existsSync()) {
-          await Process.run('explorer', ['/select,', caminho.replaceAll('/', r'\')]);
+          await Process.run('explorer', [
+            '/select,',
+            caminho.replaceAll('/', r'\'),
+          ]);
         } else {
           await Process.run('explorer', [pasta.replaceAll('/', r'\')]);
         }
@@ -43,10 +46,16 @@ class Sistema {
 
       // Tenta os gerenciadores mais comuns antes de cair no xdg-open.
       for (final comando in [
-        ['dbus-send', '--session', '--dest=org.freedesktop.FileManager1',
-          '--type=method_call', '/org/freedesktop/FileManager1',
+        [
+          'dbus-send',
+          '--session',
+          '--dest=org.freedesktop.FileManager1',
+          '--type=method_call',
+          '/org/freedesktop/FileManager1',
           'org.freedesktop.FileManager1.ShowItems',
-          'array:string:file://$caminho', 'string:'],
+          'array:string:file://$caminho',
+          'string:',
+        ],
         ['nautilus', '--select', caminho],
         ['dolphin', '--select', caminho],
         ['nemo', caminho],
@@ -54,7 +63,10 @@ class Sistema {
         ['xdg-open', pasta],
       ]) {
         try {
-          final resultado = await Process.run(comando.first, comando.sublist(1));
+          final resultado = await Process.run(
+            comando.first,
+            comando.sublist(1),
+          );
           if (resultado.exitCode == 0) return true;
         } catch (_) {
           continue;
@@ -114,6 +126,39 @@ class Sistema {
       await Process.run('notify-send', ['-a', 'PDF Enxuto', titulo, corpo]);
     } catch (_) {
       // Notificação é opcional: se falhar, ninguém perde nada.
+    }
+  }
+
+  /// Cria uma pasta de trabalho temporária, sempre dentro de uma pasta
+  /// própria do app (facilita a limpeza depois).
+  static Directory criarPastaTemporaria([String prefixo = 'job_']) {
+    final base = Directory(
+      '${Directory.systemTemp.path}${Platform.pathSeparator}pdf_enxuto',
+    );
+    if (!base.existsSync()) base.createSync(recursive: true);
+    return base.createTempSync(prefixo);
+  }
+
+  /// Apaga pastas temporárias que sobraram de execuções interrompidas
+  /// (por exemplo, quando o app foi fechado no meio de uma compressão).
+  static Future<void> limparTemporariosAntigos({
+    Duration maisVelhosQue = const Duration(hours: 6),
+  }) async {
+    try {
+      final base = Directory(
+        '${Directory.systemTemp.path}${Platform.pathSeparator}pdf_enxuto',
+      );
+      if (!base.existsSync()) return;
+
+      final agora = DateTime.now();
+      for (final entidade in base.listSync()) {
+        if (entidade is! Directory) continue;
+        final modificado = entidade.statSync().modified;
+        if (agora.difference(modificado) < maisVelhosQue) continue;
+        entidade.deleteSync(recursive: true);
+      }
+    } catch (_) {
+      // Limpeza é cortesia: se falhar, nada quebra.
     }
   }
 

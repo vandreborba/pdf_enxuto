@@ -1,146 +1,20 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import 'package:pdf_enxuto/theme/app_theme.dart';
 
-/// Fundo do app: gradiente suave com "manchas" coloridas que flutuam devagar.
+/// Fundo do app: cor lisa, sem degradê e sem enfeites.
 ///
-/// Fica atrás de tudo, é barato de desenhar (gradientes radiais, sem blur) e
-/// dá a personalidade visual sem atrapalhar a leitura.
-class FundoAnimado extends StatefulWidget {
+/// A personalidade vem da cor de destaque escolhida nas configurações, usada
+/// com parcimônia — nada de manchas coloridas atrás do conteúdo.
+class FundoAnimado extends StatelessWidget {
   const FundoAnimado({super.key, required this.child});
 
   final Widget child;
 
   @override
-  State<FundoAnimado> createState() => _FundoAnimadoState();
-}
-
-class _FundoAnimadoState extends State<FundoAnimado>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controle = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 26),
-  );
-
-  @override
-  void initState() {
-    super.initState();
-    _controle.repeat();
-  }
-
-  @override
-  void dispose() {
-    _controle.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final esquema = Theme.of(context).colorScheme;
-    final cores = context.cores;
-    final escuro = esquema.brightness == Brightness.dark;
-    final animar = !MediaQuery.of(context).disableAnimations;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: cores.gradienteSuperficie,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: RepaintBoundary(
-              child: animar
-                  ? AnimatedBuilder(
-                      animation: _controle,
-                      builder: (context, _) => CustomPaint(
-                        painter: _PintorManchas(
-                          progresso: _controle.value,
-                          corPrimaria: cores.accent,
-                          corSecundaria: cores.accentSecundaria,
-                          opacidade: escuro ? 0.30 : 0.20,
-                        ),
-                      ),
-                    )
-                  : CustomPaint(
-                      painter: _PintorManchas(
-                        progresso: 0.2,
-                        corPrimaria: cores.accent,
-                        corSecundaria: cores.accentSecundaria,
-                        opacidade: escuro ? 0.30 : 0.20,
-                      ),
-                    ),
-            ),
-          ),
-          Positioned.fill(child: widget.child),
-        ],
-      ),
-    );
+    return ColoredBox(color: context.cores.fundo, child: child);
   }
-}
-
-class _PintorManchas extends CustomPainter {
-  _PintorManchas({
-    required this.progresso,
-    required this.corPrimaria,
-    required this.corSecundaria,
-    required this.opacidade,
-  });
-
-  final double progresso;
-  final Color corPrimaria;
-  final Color corSecundaria;
-  final double opacidade;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final raio = math.max(size.width, size.height);
-
-    void mancha(
-      double fx,
-      double fy,
-      double escala,
-      Color cor,
-      double fase,
-      double forca,
-    ) {
-      final angulo = (progresso + fase) * 2 * math.pi;
-      final centro = Offset(
-        size.width * fx + math.cos(angulo) * size.width * 0.06,
-        size.height * fy + math.sin(angulo * 0.8) * size.height * 0.05,
-      );
-      final gradiente = RadialGradient(
-        colors: [
-          cor.withValues(alpha: forca * opacidade),
-          cor.withValues(alpha: 0),
-        ],
-      );
-      canvas.drawCircle(
-        centro,
-        raio * escala,
-        Paint()
-          ..shader = gradiente.createShader(
-            Rect.fromCircle(center: centro, radius: raio * escala),
-          ),
-      );
-    }
-
-    mancha(0.12, 0.08, 0.55, corPrimaria, 0.0, 1.0);
-    mancha(0.92, 0.18, 0.48, corSecundaria, 0.35, 0.9);
-    mancha(0.78, 0.95, 0.52, corPrimaria, 0.62, 0.7);
-  }
-
-  @override
-  bool shouldRepaint(covariant _PintorManchas antigo) =>
-      antigo.progresso != progresso ||
-      antigo.corPrimaria != corPrimaria ||
-      antigo.corSecundaria != corSecundaria ||
-      antigo.opacidade != opacidade;
 }
 
 /// Barra de progresso com brilho deslizante quando indeterminada.
@@ -194,14 +68,7 @@ class BarraProgresso extends StatelessWidget {
             ),
             FractionallySizedBox(
               widthFactor: animado.clamp(0.0, 1.0),
-              child: Container(
-                height: altura,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [corFinal, cores.accentSecundaria],
-                  ),
-                ),
-              ),
+              child: Container(height: altura, color: corFinal),
             ),
           ],
         ),
@@ -318,26 +185,14 @@ class _BrilhoCarregandoState extends State<BrilhoCarregando>
   @override
   Widget build(BuildContext context) {
     if (!widget.ativo) return widget.child;
-    final cores = context.cores;
 
-    return AnimatedBuilder(
-      animation: _controle,
-      builder: (context, filho) => ShaderMask(
-        blendMode: BlendMode.srcATop,
-        shaderCallback: (retangulo) {
-          final deslocamento = _controle.value * 2 - 1;
-          return LinearGradient(
-            begin: Alignment(-1 + deslocamento * 2, -0.4),
-            end: Alignment(1 + deslocamento * 2, 0.4),
-            colors: [
-              Colors.transparent,
-              cores.brilho.withValues(alpha: 0.28),
-              Colors.transparent,
-            ],
-          ).createShader(retangulo);
-        },
-        child: filho,
-      ),
+    // Pulsa a opacidade em vez de passar um brilho: discreto e suficiente
+    // para indicar que algo está acontecendo.
+    return FadeTransition(
+      opacity: Tween<double>(
+        begin: 0.55,
+        end: 1,
+      ).animate(CurvedAnimation(parent: _controle, curve: Curves.easeInOut)),
       child: widget.child,
     );
   }

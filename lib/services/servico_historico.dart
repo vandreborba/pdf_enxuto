@@ -24,7 +24,10 @@ class ServicoHistorico extends ChangeNotifier {
       final texto = prefs.getString(_chave);
       if (texto == null || texto.isEmpty) return;
       final lista = (jsonDecode(texto) as List)
-          .map((item) => HistoryEntry.fromJson((item as Map).cast<String, dynamic>()))
+          .map(
+            (item) =>
+                HistoryEntry.fromJson((item as Map).cast<String, dynamic>()),
+          )
           .toList();
       _entradas = lista;
       notifyListeners();
@@ -88,7 +91,8 @@ class ServicoHistorico extends ChangeNotifier {
   int get partesGeradas {
     var total = 0;
     for (final entrada in _entradas) {
-      if (entrada.kind == TaskKind.dividir) total += entrada.resultado.saidas.length;
+      if (entrada.kind == TaskKind.dividir)
+        total += entrada.resultado.saidas.length;
     }
     return total;
   }

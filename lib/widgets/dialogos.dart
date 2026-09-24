@@ -54,13 +54,9 @@ class DialogoNovidades extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(26, 24, 26, 22),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: cores.gradienteMarca,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: cores.accent,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(22),
+                  top: Radius.circular(14),
                 ),
               ),
               child: Column(
@@ -68,17 +64,17 @@ class DialogoNovidades extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.rocket_launch_rounded,
-                        color: Colors.white,
+                        color: cores.sobreAccent,
                         size: 26,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           '${S.appName} $versao',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: cores.sobreAccent,
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.3,
@@ -90,16 +86,16 @@ class DialogoNovidades extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.check_circle_outline_rounded,
-                        color: Colors.white70,
+                        color: cores.sobreAccent.withValues(alpha: 0.75),
                         size: 15,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         'Você está na ${resultado.versaoAtual}',
-                        style: const TextStyle(
-                          color: Colors.white70,
+                        style: TextStyle(
+                          color: cores.sobreAccent.withValues(alpha: 0.75),
                           fontSize: 13,
                         ),
                       ),
@@ -125,10 +121,9 @@ class DialogoNovidades extends StatelessWidget {
                       Text(
                         'Pacote: ${resultado.nomeArquivo ?? ''} '
                         '(${Fmt.bytes(resultado.tamanhoBytes!)})',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: esquema.onSurfaceVariant),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: esquema.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ],
@@ -206,10 +201,9 @@ class _NotasMarkdown extends StatelessWidget {
             padding: const EdgeInsets.only(top: 6, bottom: 4),
             child: Text(
               titulo,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleSmall
-                  ?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
         );
@@ -300,14 +294,9 @@ class BannerAtualizacao extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 18),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              cores.accent.withValues(alpha: 0.16),
-              cores.accentSecundaria.withValues(alpha: 0.12),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cores.accent.withValues(alpha: 0.4)),
+          color: cores.accent.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: cores.accent.withValues(alpha: 0.35)),
         ),
         child: Row(
           children: [
@@ -377,8 +366,8 @@ class DialogoSobre extends StatelessWidget {
                     width: 62,
                     height: 62,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: cores.gradienteMarca),
-                      borderRadius: BorderRadius.circular(16),
+                      color: cores.accentSuave,
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     padding: const EdgeInsets.all(9),
                     child: Image.asset('assets/icons/icon.png'),
@@ -394,9 +383,7 @@ class DialogoSobre extends StatelessWidget {
                         ),
                         Text(
                           'Versão $versao',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
+                          style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(color: esquema.onSurfaceVariant),
                         ),
                       ],
@@ -457,11 +444,7 @@ class DialogoSobre extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.shield_outlined,
-                      size: 18,
-                      color: cores.sucesso,
-                    ),
+                    Icon(Icons.shield_outlined, size: 18, color: cores.sucesso),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -489,10 +472,9 @@ class DialogoSobre extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 S.feitoCom,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: esquema.onSurfaceVariant),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: esquema.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 18),
               Align(
@@ -556,9 +538,7 @@ class _LinkTiles extends StatelessWidget {
                           ),
                           Text(
                             item.$4,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
+                            style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(color: esquema.onSurfaceVariant),
                           ),
                         ],
@@ -599,13 +579,9 @@ class DialogoBoasVindas extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(26, 26, 26, 22),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: cores.gradienteMarca,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: cores.accent,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(22),
+                  top: Radius.circular(14),
                 ),
               ),
               child: Column(
@@ -621,21 +597,24 @@ class DialogoBoasVindas extends StatelessWidget {
                     child: Image.asset('assets/icons/icon.png'),
                   ),
                   const SizedBox(height: 14),
-                  const Text(
+                  Text(
                     'Bem-vindo ao ${S.appName}',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: cores.sobreAccent,
                       fontSize: 21,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.4,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     S.tagline,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 13.5),
+                    style: TextStyle(
+                      color: cores.sobreAccent.withValues(alpha: 0.75),
+                      fontSize: 13.5,
+                    ),
                   ),
                 ],
               ),
@@ -730,10 +709,10 @@ class _PassoBoasVindas extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   texto,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: esquema.onSurfaceVariant, height: 1.4),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: esquema.onSurfaceVariant,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -804,7 +783,8 @@ Future<bool> abrirEmail({
   final uri = Uri(
     scheme: 'mailto',
     path: AppInfo.email,
-    query: 'subject=${Uri.encodeComponent(assunto)}'
+    query:
+        'subject=${Uri.encodeComponent(assunto)}'
         '&body=${Uri.encodeComponent(corpo)}',
   );
   try {
@@ -848,7 +828,8 @@ class _DialogoRelatoState extends State<DialogoRelato> {
     super.dispose();
   }
 
-  String get _assunto => _recurso ? AppInfo.assuntoRecurso : AppInfo.assuntoProblema;
+  String get _assunto =>
+      _recurso ? AppInfo.assuntoRecurso : AppInfo.assuntoProblema;
 
   String _corpo() {
     final buffer = StringBuffer()
@@ -873,13 +854,9 @@ class _DialogoRelatoState extends State<DialogoRelato> {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(24, 22, 24, 20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: cores.gradienteMarca,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: cores.accent,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(22),
+                  top: Radius.circular(14),
                 ),
               ),
               child: Row(
@@ -888,7 +865,7 @@ class _DialogoRelatoState extends State<DialogoRelato> {
                     _recurso
                         ? Icons.lightbulb_outline_rounded
                         : Icons.bug_report_outlined,
-                    color: Colors.white,
+                    color: cores.sobreAccent,
                     size: 26,
                   ),
                   const SizedBox(width: 14),
@@ -896,10 +873,10 @@ class _DialogoRelatoState extends State<DialogoRelato> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           S.relatarTitulo,
                           style: TextStyle(
-                            color: Colors.white,
+                            color: cores.sobreAccent,
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
                           ),
@@ -907,8 +884,8 @@ class _DialogoRelatoState extends State<DialogoRelato> {
                         const SizedBox(height: 3),
                         Text(
                           'Enviado para ${AppInfo.email}',
-                          style: const TextStyle(
-                            color: Colors.white70,
+                          style: TextStyle(
+                            color: cores.sobreAccent.withValues(alpha: 0.75),
                             fontSize: 12.5,
                           ),
                         ),
@@ -942,9 +919,7 @@ class _DialogoRelatoState extends State<DialogoRelato> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      _recurso
-                          ? S.relatarDicaRecurso
-                          : S.relatarDicaProblema,
+                      _recurso ? S.relatarDicaRecurso : S.relatarDicaProblema,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 12),
@@ -1088,12 +1063,12 @@ class DialogoInstalarMotor extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: cores.gradienteMarca),
-                      borderRadius: BorderRadius.circular(13),
+                      color: cores.accentSuave,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.memory_rounded,
-                      color: Colors.white,
+                      color: cores.accentEscuro,
                       size: 22,
                     ),
                   ),
@@ -1134,7 +1109,11 @@ class DialogoInstalarMotor extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline_rounded, size: 17, color: cores.accent),
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 17,
+                      color: cores.accent,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -1170,10 +1149,9 @@ class DialogoInstalarMotor extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 S.instalacaoSemPermissao,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: esquema.onSurfaceVariant),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: esquema.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 18),
               Wrap(

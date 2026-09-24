@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:pdf_enxuto/core/app_strings.dart';
 import 'package:pdf_enxuto/core/cancelamento.dart';
+import 'package:pdf_enxuto/core/sistema.dart';
 import 'package:pdf_enxuto/core/formatting.dart';
 import 'package:pdf_enxuto/models/compression_options.dart';
 import 'package:pdf_enxuto/models/task_models.dart';
@@ -66,13 +67,22 @@ class ServicoCompressao {
       );
     }
 
-    final alvo = alvoBytes ??
+    final alvo =
+        alvoBytes ??
         (opcoes.targetEnabled && opcoes.targetBytes > 0
             ? opcoes.targetBytes
             : null);
 
+    // No modo "por tamanho" o perfil não entra: a busca começa sempre na
+    // melhor qualidade e desce até o piso.
+    final base = opcoes.targetEnabled
+        ? opcoes.partidaDaBusca(
+            rasterizando: opcoes.textMode == TextMode.rasterizar,
+          )
+        : opcoes;
+
     final avisos = <String>[];
-    final temporaria = await Directory.systemTemp.createTemp('pdf_enxuto_');
+    final temporaria = await Future.value(Sistema.criarPastaTemporaria());
     _Tentativa? melhor;
     String? ultimoErro;
     MotorPdf? motorEscolhido;
@@ -80,7 +90,7 @@ class ServicoCompressao {
     try {
       for (final motor in motores.cadeia(opcoes)) {
         cancelamento.verificar();
-        final tentativas = _escada(motor, opcoes, alvo);
+        final tentativas = _escada(motor, base, alvo);
         var fracassoDoMotor = false;
 
         for (var i = 0; i < tentativas.length; i++) {
@@ -154,7 +164,8 @@ class ServicoCompressao {
 
         if (fracassoDoMotor) continue;
 
-        final atingiuAlvo = alvo == null || (melhor != null && melhor.tamanho <= alvo);
+        final atingiuAlvo =
+            alvo == null || (melhor != null && melhor.tamanho <= alvo);
         final reduziu = melhor != null && melhor.tamanho < tamanhoOriginal;
         if ((atingiuAlvo && reduziu) || (alvo == null && reduziu)) break;
       }
@@ -238,22 +249,25 @@ class ServicoCompressao {
       return [base];
     }
     // O modo "manter texto" do motor nativo também não tem o que ajustar.
-    if (motor.tipo == EngineKind.nativo && base.textMode == TextMode.manterTexto) {
+    if (motor.tipo == EngineKind.nativo &&
+        base.textMode == TextMode.manterTexto) {
       return [base];
     }
 
     const passos = 6;
-    final dpiMinimo = math.max(60.0, 72 + (base.dpi - 72) * base.qualidadeMinima);
-    final qualidadeMinima =
-        math.max(25.0, 30 + (base.jpegQuality - 30) * base.qualidadeMinima);
+    final dpiMinimo = math.max(
+      60.0,
+      72 + (base.dpi - 72) * base.qualidadeMinima,
+    );
+    final qualidadeMinima = math.max(
+      25.0,
+      30 + (base.jpegQuality - 30) * base.qualidadeMinima,
+    );
     final lista = <CompressionOptions>[base];
 
     for (var k = 1; k <= passos; k++) {
       final t = k / passos;
-      final dpi = math.max(
-        dpiMinimo,
-        base.dpi * (1 - 0.72 * t),
-      );
+      final dpi = math.max(dpiMinimo, base.dpi * (1 - 0.72 * t));
       final qualidade = math.max(
         qualidadeMinima,
         base.jpegQuality - (base.jpegQuality - 28) * t,
@@ -311,20 +325,22 @@ class ServicoCompressao {
   }) async {
     if (paginas <= 0) return null;
 
-    final temporaria = await Directory.systemTemp.createTemp('pdf_enxuto_sim_');
+    final temporaria = await Future.value(
+      Sistema.criarPastaTemporaria('simulacao_'),
+    );
     try {
       final bytes = await File(entrada).readAsBytes();
       final recorte = await Isolate.run(
-        () => PdfOperations.extrairPaginas(
-          PdfReader.abrirBytes(bytes),
-          const [1],
-        ).bytes,
+        () => PdfOperations.extrairPaginas(PdfReader.abrirBytes(bytes), const [
+          1,
+        ]).bytes,
       );
 
       final amostra = '${temporaria.path}${Platform.pathSeparator}pagina1.pdf';
       await File(amostra).writeAsBytes(recorte, flush: true);
 
-      final saida = '${temporaria.path}${Platform.pathSeparator}pagina1_saida.pdf';
+      final saida =
+          '${temporaria.path}${Platform.pathSeparator}pagina1_saida.pdf';
       final motor = motores.cadeia(opcoes).first;
 
       final resultado = await motor.comprimir(

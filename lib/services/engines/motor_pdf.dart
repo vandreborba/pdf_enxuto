@@ -15,9 +15,9 @@ class EstadoMotor {
   });
 
   const EstadoMotor.indisponivel([this.erro])
-      : disponivel = false,
-        caminho = null,
-        versao = null;
+    : disponivel = false,
+      caminho = null,
+      versao = null;
 
   final bool disponivel;
   final String? caminho;
@@ -28,12 +28,12 @@ class EstadoMotor {
 /// Resultado de uma execução de motor.
 class ResultadoMotor {
   const ResultadoMotor.ok({this.aviso, this.detalhe})
-      : sucesso = true,
-        erro = null;
+    : sucesso = true,
+      erro = null;
 
   const ResultadoMotor.falha(this.erro, {this.detalhe})
-      : sucesso = false,
-        aviso = null;
+    : sucesso = false,
+      aviso = null;
 
   final bool sucesso;
   final String? erro;
@@ -95,6 +95,5 @@ abstract class MotorPdf {
     required String entrada,
     required CompressionOptions opcoes,
     required Cancelamento cancelamento,
-  }) async =>
-      null;
+  }) async => null;
 }

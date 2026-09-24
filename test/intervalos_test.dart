@@ -243,7 +243,7 @@ void main() {
         preset: CompressionPreset.forte,
         textMode: TextMode.rasterizar,
         engine: EngineKind.ghostscript,
-        targetEnabled: true,
+        modo: CompressionMode.porTamanho,
         targetBytes: 3 * 1024 * 1024,
         targetScope: TargetScope.total,
         dpi: 120,
@@ -260,10 +260,72 @@ void main() {
       expect(json['cor'], 'cinza');
     });
 
+    test('os dois modos são separados: perfil ou tamanho alvo', () {
+      const base = CompressionOptions();
+      expect(base.modo, CompressionMode.porPerfil);
+      expect(base.targetEnabled, isFalse);
+
+      final comAlvo = base.copyWith(
+        modo: CompressionMode.porTamanho,
+        targetBytes: 4 * 1024 * 1024,
+      );
+      expect(comAlvo.targetEnabled, isTrue);
+      // O modo alvo não usa o perfil como ponto de partida: a busca começa
+      // sempre na melhor qualidade.
+      final partida = comAlvo.partidaDaBusca(rasterizando: false);
+      expect(partida.dpi, 300);
+      expect(partida.jpegQuality, 92);
+      final partidaImagem = comAlvo.partidaDaBusca(rasterizando: true);
+      expect(partidaImagem.dpi, 200);
+    });
+
+    test('a faixa da busca respeita o piso de qualidade', () {
+      const comAlvo = CompressionOptions(
+        modo: CompressionMode.porTamanho,
+        dpi: 300,
+        jpegQuality: 92,
+        qualidadeMinima: 0.5,
+      );
+      final faixa = comAlvo.faixaDoAlvo;
+      expect(faixa.dpiInicial, 300);
+      expect(faixa.jpegInicial, 92);
+      // Piso de 50%: 72 + (300-72)*0.5 = 186 dpi e 30 + (92-30)*0.5 = 61
+      expect(faixa.dpiFinal, 186);
+      expect(faixa.jpegFinal, 61);
+
+      const semPiso = CompressionOptions(
+        modo: CompressionMode.porTamanho,
+        dpi: 300,
+        qualidadeMinima: 0,
+      );
+      expect(semPiso.faixaDoAlvo.dpiFinal, 84); // 300 * 0.28
+    });
+
+    test('o modo é gravado e o formato antigo continua sendo lido', () {
+      final json = const CompressionOptions(
+        modo: CompressionMode.porTamanho,
+        targetBytes: 2 * 1024 * 1024,
+      ).toJson();
+      expect(json['modo'], 'porTamanho');
+      expect(
+        CompressionOptions.fromJson(json).modo,
+        CompressionMode.porTamanho,
+      );
+
+      // Configuração antiga, gravada antes do seletor de modo.
+      final antigo = CompressionOptions.fromJson(const {
+        'preset': 'forte',
+        'target': true,
+        'targetBytes': 3145728,
+      });
+      expect(antigo.modo, CompressionMode.porTamanho);
+      expect(antigo.targetBytes, 3145728);
+    });
+
     test('aplicar um perfil mantém as escolhas fora do perfil', () {
       const base = CompressionOptions(
         textMode: TextMode.rasterizar,
-        targetEnabled: true,
+        modo: CompressionMode.porTamanho,
         targetBytes: 2 * 1024 * 1024,
         removeAnnotations: true,
       );

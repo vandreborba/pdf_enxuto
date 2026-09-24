@@ -44,8 +44,10 @@ class RangeParseResult {
   int get totalPaginas =>
       intervalos.fold(0, (soma, intervalo) => soma + intervalo.quantidade);
 
-  static const RangeParseResult vazio =
-      RangeParseResult(intervalos: [], erros: []);
+  static const RangeParseResult vazio = RangeParseResult(
+    intervalos: [],
+    erros: [],
+  );
 }
 
 /// Lê textos como "1-3, 7, 10-12" (e também "1-", "-4", "5").
@@ -83,8 +85,9 @@ class PageRangeParser {
         }
 
         final inicio = inicioTexto.isEmpty ? 1 : int.tryParse(inicioTexto);
-        final fim =
-            fimTexto.isEmpty ? (totalPaginas ?? 1 << 30) : int.tryParse(fimTexto);
+        final fim = fimTexto.isEmpty
+            ? (totalPaginas ?? 1 << 30)
+            : int.tryParse(fimTexto);
 
         if (inicio == null || fim == null) {
           erros.add('"$token" não é um intervalo válido');
@@ -155,13 +158,16 @@ class PageRangeParser {
   /// Junta e ordena intervalos sobrepostos ou vizinhos.
   static List<PageRange> normalizar(List<PageRange> intervalos) {
     if (intervalos.isEmpty) return const [];
-    final ordenados = [...intervalos]..sort((a, b) => a.inicio.compareTo(b.inicio));
+    final ordenados = [...intervalos]
+      ..sort((a, b) => a.inicio.compareTo(b.inicio));
     final resultado = <PageRange>[ordenados.first];
     for (final atual in ordenados.skip(1)) {
       final ultimo = resultado.last;
       if (atual.inicio <= ultimo.fim + 1) {
-        resultado[resultado.length - 1] =
-            PageRange(ultimo.inicio, math.max(ultimo.fim, atual.fim));
+        resultado[resultado.length - 1] = PageRange(
+          ultimo.inicio,
+          math.max(ultimo.fim, atual.fim),
+        );
       } else {
         resultado.add(atual);
       }

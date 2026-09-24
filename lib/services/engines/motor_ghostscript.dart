@@ -36,10 +36,10 @@ class MotorGhostscript extends MotorPdf {
   @override
   String get comoInstalar => Sistema.ehWindows
       ? 'Baixe em ghostscript.com/releases (instalador .exe) e marque a opção '
-          'de adicionar ao PATH.'
+            'de adicionar ao PATH.'
       : 'Debian/Ubuntu: sudo apt install ghostscript\n'
-          'Fedora: sudo dnf install ghostscript\n'
-          'Arch: sudo pacman -S ghostscript';
+            'Fedora: sudo dnf install ghostscript\n'
+            'Arch: sudo pacman -S ghostscript';
 
   @override
   String get siteOficial => 'https://www.ghostscript.com/releases/gsdnld.html';
@@ -91,7 +91,8 @@ class MotorGhostscript extends MotorPdf {
         'compressão (o motor nativo gera 1 bit por pixel).',
       );
     }
-    if (opcoes.removeMetadata == false && opcoes.textMode == TextMode.manterTexto) {
+    if (opcoes.removeMetadata == false &&
+        opcoes.textMode == TextMode.manterTexto) {
       avisos.add(
         'O Ghostscript sempre regrava as informações do documento; '
         'título e autor podem não ser preservados.',
@@ -143,7 +144,10 @@ class MotorGhostscript extends MotorPdf {
     // Divisão sem perdas: qualidade máxima, só recortando o intervalo.
     for (var i = 0; i < partes.length; i++) {
       cancelamento.verificar();
-      progresso(i / math.max(1, partes.length), 'Parte ${i + 1} de ${partes.length}');
+      progresso(
+        i / math.max(1, partes.length),
+        'Parte ${i + 1} de ${partes.length}',
+      );
 
       final primeira = partes[i].first.inicio;
       final ultima = partes[i].last.fim;
@@ -261,7 +265,9 @@ class MotorGhostscript extends MotorPdf {
     final parcial = '$saida.parcial';
     final argumentosFinais = [
       for (final argumento in argumentos)
-        argumento == '-sOutputFile=$saida' ? '-sOutputFile=$parcial' : argumento,
+        argumento == '-sOutputFile=$saida'
+            ? '-sOutputFile=$parcial'
+            : argumento,
     ];
 
     try {
@@ -298,8 +304,10 @@ class MotorGhostscript extends MotorPdf {
       progresso(1, 'Concluído');
       return const ResultadoMotor.ok();
     } on ProcessException catch (erro) {
-      return ResultadoMotor.falha('Não foi possível executar o Ghostscript',
-          detalhe: '$erro');
+      return ResultadoMotor.falha(
+        'Não foi possível executar o Ghostscript',
+        detalhe: '$erro',
+      );
     }
   }
 

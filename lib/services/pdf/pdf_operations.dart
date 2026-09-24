@@ -182,7 +182,13 @@ class PdfOperations {
         'Producer': PdfString(Uint8List.fromList(produtor.codeUnits)),
       };
       if (infoOrigem != null) {
-        for (final chave in ['Title', 'Author', 'Subject', 'Keywords', 'Creator']) {
+        for (final chave in [
+          'Title',
+          'Author',
+          'Subject',
+          'Keywords',
+          'Creator',
+        ]) {
           final valor = infoOrigem[chave];
           if (valor == null) continue;
           final copiado = copiador.copiarValor(valor, _Ctx.normal, chave);
@@ -341,8 +347,7 @@ class _Copiador {
       _proibidos.add(referencia.numero);
       return null;
     }
-    if (origem is PdfStream &&
-        origem.dict.nome('Type') == 'XRef') {
+    if (origem is PdfStream && origem.dict.nome('Type') == 'XRef') {
       return null;
     }
     if (origem is PdfStream && origem.dict.nome('Type') == 'ObjStm') {
@@ -414,7 +419,9 @@ class _Copiador {
       final comprimido = _comprimir(raw);
       if (comprimido.length < raw.length) {
         raw = comprimido;
-        novoDict = dict.copiarCom({'Filter': PdfName.flate}).sem(['DecodeParms']);
+        novoDict = dict.copiarCom({'Filter': PdfName.flate}).sem([
+          'DecodeParms',
+        ]);
         fluxosRecomprimidos++;
       }
     }

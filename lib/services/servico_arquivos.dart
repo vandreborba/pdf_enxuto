@@ -38,7 +38,9 @@ class ServicoArquivos {
         .replaceAll('{inicio}', '$inicio')
         .replaceAll('{fim}', '$fim')
         .replaceAll('{paginas}', '$paginas');
-    return Fmt.nomeSeguro(nome.trim().isEmpty ? '$nomeBase - parte $parte' : nome);
+    return Fmt.nomeSeguro(
+      nome.trim().isEmpty ? '$nomeBase - parte $parte' : nome,
+    );
   }
 
   /// Exemplo de nome gerado pelo padrão (mostrado na tela de divisão).
@@ -57,7 +59,10 @@ class ServicoArquivos {
   /// Evita sobrescrever: "arquivo.pdf" → "arquivo (1).pdf".
   ///
   /// Devolve `null` quando a sobrescrita está liberada.
-  static String? proximoNomeLivre(String caminho, {required bool sobrescrever}) {
+  static String? proximoNomeLivre(
+    String caminho, {
+    required bool sobrescrever,
+  }) {
     if (sobrescrever || !File(caminho).existsSync()) return null;
 
     final pasta = File(caminho).parent.path;

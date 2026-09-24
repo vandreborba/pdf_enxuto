@@ -8,7 +8,6 @@ class AppSettings {
     this.tema = ThemeMode.system,
     this.corDestaque = 0,
     this.reduzirAnimacoes = false,
-    this.confirmarSaida = true,
     this.abrirPastaAoTerminar = false,
     this.notificarAoTerminar = true,
     this.sobrescrever = false,
@@ -30,7 +29,6 @@ class AppSettings {
   final int corDestaque;
 
   final bool reduzirAnimacoes;
-  final bool confirmarSaida;
   final bool abrirPastaAoTerminar;
   final bool notificarAoTerminar;
   final bool sobrescrever;
@@ -61,7 +59,6 @@ class AppSettings {
     ThemeMode? tema,
     int? corDestaque,
     bool? reduzirAnimacoes,
-    bool? confirmarSaida,
     bool? abrirPastaAoTerminar,
     bool? notificarAoTerminar,
     bool? sobrescrever,
@@ -82,20 +79,21 @@ class AppSettings {
       tema: tema ?? this.tema,
       corDestaque: corDestaque ?? this.corDestaque,
       reduzirAnimacoes: reduzirAnimacoes ?? this.reduzirAnimacoes,
-      confirmarSaida: confirmarSaida ?? this.confirmarSaida,
       abrirPastaAoTerminar: abrirPastaAoTerminar ?? this.abrirPastaAoTerminar,
       notificarAoTerminar: notificarAoTerminar ?? this.notificarAoTerminar,
       sobrescrever: sobrescrever ?? this.sobrescrever,
       processarEmParalelo: processarEmParalelo ?? this.processarEmParalelo,
       simultaneos: simultaneos ?? this.simultaneos,
-      verificarAtualizacoes: verificarAtualizacoes ?? this.verificarAtualizacoes,
+      verificarAtualizacoes:
+          verificarAtualizacoes ?? this.verificarAtualizacoes,
       avisosDesligados: avisosDesligados ?? this.avisosDesligados,
       versaoIgnorada: limparVersaoIgnorada == true
           ? null
           : (versaoIgnorada ?? this.versaoIgnorada),
       ultimaVerificacao: ultimaVerificacao ?? this.ultimaVerificacao,
-      pastaSaida:
-          limparPastaSaida == true ? null : (pastaSaida ?? this.pastaSaida),
+      pastaSaida: limparPastaSaida == true
+          ? null
+          : (pastaSaida ?? this.pastaSaida),
       compressao: compressao ?? this.compressao,
       divisao: divisao ?? this.divisao,
       onboardingVisto: onboardingVisto ?? this.onboardingVisto,
@@ -103,24 +101,23 @@ class AppSettings {
   }
 
   Map<String, dynamic> toJson() => {
-        'tema': tema.name,
-        'cor': corDestaque,
-        'reduzirAnimacoes': reduzirAnimacoes,
-        'confirmarSaida': confirmarSaida,
-        'abrirPasta': abrirPastaAoTerminar,
-        'notificar': notificarAoTerminar,
-        'sobrescrever': sobrescrever,
-        'paralelo': processarEmParalelo,
-        'simultaneos': simultaneos,
-        'verificarAtualizacoes': verificarAtualizacoes,
-        'avisosDesligados': avisosDesligados,
-        'versaoIgnorada': versaoIgnorada,
-        'ultimaVerificacao': ultimaVerificacao?.toIso8601String(),
-        'pastaSaida': pastaSaida,
-        'compressao': compressao.toJson(),
-        'divisao': divisao.toJson(),
-        'onboarding': onboardingVisto,
-      };
+    'tema': tema.name,
+    'cor': corDestaque,
+    'reduzirAnimacoes': reduzirAnimacoes,
+    'abrirPasta': abrirPastaAoTerminar,
+    'notificar': notificarAoTerminar,
+    'sobrescrever': sobrescrever,
+    'paralelo': processarEmParalelo,
+    'simultaneos': simultaneos,
+    'verificarAtualizacoes': verificarAtualizacoes,
+    'avisosDesligados': avisosDesligados,
+    'versaoIgnorada': versaoIgnorada,
+    'ultimaVerificacao': ultimaVerificacao?.toIso8601String(),
+    'pastaSaida': pastaSaida,
+    'compressao': compressao.toJson(),
+    'divisao': divisao.toJson(),
+    'onboarding': onboardingVisto,
+  };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
     final comp = (json['compressao'] as Map?)?.cast<String, dynamic>() ?? {};
@@ -133,7 +130,6 @@ class AppSettings {
       ),
       corDestaque: (json['cor'] as num?)?.toInt() ?? 0,
       reduzirAnimacoes: json['reduzirAnimacoes'] as bool? ?? false,
-      confirmarSaida: json['confirmarSaida'] as bool? ?? true,
       abrirPastaAoTerminar: json['abrirPasta'] as bool? ?? false,
       notificarAoTerminar: json['notificar'] as bool? ?? true,
       sobrescrever: json['sobrescrever'] as bool? ?? false,
@@ -142,7 +138,9 @@ class AppSettings {
       verificarAtualizacoes: json['verificarAtualizacoes'] as bool? ?? true,
       avisosDesligados: json['avisosDesligados'] as bool? ?? false,
       versaoIgnorada: json['versaoIgnorada'] as String?,
-      ultimaVerificacao: DateTime.tryParse(json['ultimaVerificacao'] as String? ?? ''),
+      ultimaVerificacao: DateTime.tryParse(
+        json['ultimaVerificacao'] as String? ?? '',
+      ),
       pastaSaida: json['pastaSaida'] as String?,
       compressao: comp.isEmpty
           ? CompressionOptions.padrao

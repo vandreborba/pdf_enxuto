@@ -8,6 +8,8 @@ Uso:
 O ícone é desenhado vetorialmente com Pillow/numpy em resolução alta e
 reduzido com LANCZOS, o que dá bordas suaves sem depender de ferramentas
 externas (Inkscape, ImageMagick, ...).
+
+A variante padrão ("flat") é sóbria: fundo de cor única, sem degradê.
 """
 
 from __future__ import annotations
@@ -228,7 +230,50 @@ def draw_variant_c(img: Image.Image, S: float) -> None:
     img.alpha_composite(layer)
 
 
-VARIANTS = {"a": draw_variant_a, "b": draw_variant_b, "c": draw_variant_c}
+def draw_variant_flat(img: Image.Image, S: float) -> None:
+    """Versao sobria: fundo liso, sem degrade, traco unico de cor."""
+    layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+
+    x0, x1 = 0.235 * S, 0.765 * S
+    y0, y1 = 0.135 * S, 0.865 * S
+    fold = 0.150 * S
+    radius = 0.028 * S
+
+    d.polygon(
+        [(x0, y0), (x1 - fold, y0), (x1, y0 + fold), (x1, y1), (x0, y1)],
+        fill=SHEET,
+    )
+    d.polygon(
+        [(x1 - fold, y0), (x1, y0 + fold), (x1 - fold, y0 + fold)],
+        fill=(214, 219, 226),
+    )
+
+    lw = 0.034 * S
+    lr = lw / 2
+    cx = (x0 + x1) / 2
+    for y, w in ((0.268, 0.300), (0.352, 0.300), (0.790, 0.300)):
+        half = w * S / 2
+        rr(d, (cx - half, y * S - lr, cx + half, y * S + lr), lr, (198, 205, 214))
+
+    marca = (62, 76, 94)
+    arrow(d, cx, 0.470 * S, 0.610 * S, 0.072 * S, 0.190 * S, 0.088 * S, marca)
+    arrow(d, cx, 0.720 * S, 0.630 * S, 0.072 * S, 0.190 * S, 0.088 * S, marca)
+
+    img.alpha_composite(layer)
+
+
+VARIANTS = {
+    "a": draw_variant_a,
+    "b": draw_variant_b,
+    "c": draw_variant_c,
+    "flat": draw_variant_flat,
+}
+
+# Cores do fundo por variante (a "flat" usa uma cor unica).
+FUNDOS = {
+    "flat": (62, 76, 94),
+}
 
 
 # --------------------------------------------------------------------------
@@ -236,17 +281,24 @@ VARIANTS = {"a": draw_variant_a, "b": draw_variant_b, "c": draw_variant_c}
 # --------------------------------------------------------------------------
 def build_icon(size: int, variant: str = "a", ss: int = 2) -> Image.Image:
     S = size * ss
-    bg = diagonal_gradient(S, [BG_DEEP, BG_MID, BG_LIGHT])
+    if variant in FUNDOS:
+        bg = Image.new("RGB", (S, S), FUNDOS[variant])
+    else:
+        bg = diagonal_gradient(S, [BG_DEEP, BG_MID, BG_LIGHT])
     icon = bg.convert("RGBA")
 
     draw = VARIANTS[variant]
     draw(icon, S)
 
-    # Brilho superior discreto
-    gloss = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    gd = ImageDraw.Draw(gloss)
-    gd.ellipse((-0.45 * S, -1.05 * S, 1.45 * S, 0.62 * S), fill=(255, 255, 255, 26))
-    icon.alpha_composite(gloss)
+    if variant not in FUNDOS:
+        # Brilho superior discreto (só nas variantes com degradê).
+        gloss = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+        gd = ImageDraw.Draw(gloss)
+        gd.ellipse(
+            (-0.45 * S, -1.05 * S, 1.45 * S, 0.62 * S),
+            fill=(255, 255, 255, 26),
+        )
+        icon.alpha_composite(gloss)
 
     mask = rounded_mask(S, 0.225 * S)
     icon.putalpha(Image.composite(icon.getchannel("A"), Image.new("L", (S, S), 0), mask))
@@ -269,7 +321,7 @@ def preview(variant: str, path: str, sizes=(16, 24, 32, 48, 64, 128, 256)) -> No
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--variants", action="store_true", help="gera prévias das variantes A/B/C")
-    parser.add_argument("--variant", default="a", choices=sorted(VARIANTS))
+    parser.add_argument("--variant", default="flat", choices=sorted(VARIANTS))
     args = parser.parse_args()
 
     os.makedirs(OUT_DIR, exist_ok=True)

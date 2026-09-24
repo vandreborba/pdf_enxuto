@@ -44,27 +44,18 @@ class CartaoSecao extends StatelessWidget {
       atraso: atraso,
       child: Container(
         decoration: BoxDecoration(
-          color:
-              corFundo ??
-              (escuro
-                  ? esquema.surfaceContainerHigh.withValues(alpha: 0.62)
-                  : Colors.white.withValues(alpha: 0.82)),
-          borderRadius: BorderRadius.circular(20),
+          // Cartão neutro: cor lisa e uma borda fina. A cor de destaque
+          // aparece só quando o cartão é realmente importante.
+          color: corFundo ?? cores.fundoCartao,
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: destaque
-                ? cores.accent.withValues(alpha: 0.55)
-                : esquema.outlineVariant.withValues(alpha: escuro ? 0.28 : 0.6),
-            width: destaque ? 1.6 : 1,
+                ? cores.accent.withValues(alpha: 0.45)
+                : esquema.outlineVariant.withValues(
+                    alpha: escuro ? 0.35 : 0.75,
+                  ),
+            width: destaque ? 1.4 : 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: (escuro ? Colors.black : cores.accent).withValues(
-                alpha: escuro ? 0.28 : 0.06,
-              ),
-              blurRadius: destaque ? 26 : 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
         ),
         padding: padding,
         child: Column(
@@ -76,13 +67,13 @@ class CartaoSecao extends StatelessWidget {
                 children: [
                   if (icone != null) ...[
                     Container(
-                      width: 34,
-                      height: 34,
+                      width: 32,
+                      height: 32,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: cores.gradienteMarca),
-                        borderRadius: BorderRadius.circular(10),
+                        color: cores.accent.withValues(alpha: 0.11),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(icone, size: 19, color: Colors.white),
+                      child: Icon(icone, size: 18, color: cores.accentEscuro),
                     ),
                     const SizedBox(width: 12),
                   ],
@@ -197,38 +188,33 @@ class _DialogoAjuda extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(24, 20, 16, 18),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: cores.gradienteMarca,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(22),
-                ),
-              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 12, 8),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.lightbulb_outline_rounded,
-                    color: Colors.white,
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: cores.accentSuave,
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Icon(
+                      Icons.lightbulb_outline_rounded,
+                      size: 19,
+                      color: cores.accentEscuro,
+                    ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Text(
                       titulo,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 17,
-                      ),
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded, color: Colors.white),
+                    icon: const Icon(Icons.close_rounded, size: 20),
                     tooltip: 'Fechar',
                   ),
                 ],
@@ -424,7 +410,7 @@ class _BotaoGradienteState extends State<BotaoGradiente> {
             scale: _pressionado ? 0.97 : 1,
             duration: duracao,
             child: AnimatedOpacity(
-              opacity: ativo ? 1 : 0.5,
+              opacity: ativo ? 1 : 0.45,
               duration: duracao,
               child: Container(
                 width: widget.expandido ? double.infinity : null,
@@ -433,19 +419,8 @@ class _BotaoGradienteState extends State<BotaoGradiente> {
                   vertical: 16,
                 ),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: cores.gradienteMarca,
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: cores.accent.withValues(alpha: ativo ? 0.34 : 0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+                  color: _pressionado ? cores.accentEscuro : cores.accent,
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   mainAxisSize: widget.expandido
@@ -454,16 +429,16 @@ class _BotaoGradienteState extends State<BotaoGradiente> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (widget.carregando)
-                      const SizedBox(
+                      SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.4,
-                          color: Colors.white,
+                          color: cores.sobreAccent,
                         ),
                       )
                     else if (widget.icone != null)
-                      Icon(widget.icone, size: 20, color: Colors.white),
+                      Icon(widget.icone, size: 20, color: cores.sobreAccent),
                     if (widget.carregando || widget.icone != null)
                       const SizedBox(width: 10),
                     Text(
@@ -597,18 +572,13 @@ class EstadoVazio extends StatelessWidget {
               builder: (context, escala, filho) =>
                   Transform.scale(scale: escala, child: filho),
               child: Container(
-                width: 92,
-                height: 92,
+                width: 80,
+                height: 80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      cores.accent.withValues(alpha: 0.18),
-                      cores.accentSecundaria.withValues(alpha: 0.12),
-                    ],
-                  ),
+                  color: cores.accentSuave,
                 ),
-                child: Icon(icone, size: 42, color: cores.accent),
+                child: Icon(icone, size: 34, color: cores.accentEscuro),
               ),
             ),
             const SizedBox(height: 20),

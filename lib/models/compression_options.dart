@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:pdf_enxuto/core/app_strings.dart';
+import 'package:pdf_enxuto/core/formatting.dart';
 
 /// O que fazer com o texto do documento.
 enum TextMode {
@@ -9,16 +12,16 @@ enum TextMode {
   rasterizar;
 
   String get rotulo => switch (this) {
-        TextMode.manterTexto => S.modoTextoManter,
-        TextMode.rasterizar => S.modoTextoRasterizar,
-      };
+    TextMode.manterTexto => S.modoTextoManter,
+    TextMode.rasterizar => S.modoTextoRasterizar,
+  };
 
   String get descricaoCurta => switch (this) {
-        TextMode.manterTexto =>
-          'Texto continua selecionável e pesquisável (Ctrl+F).',
-        TextMode.rasterizar =>
-          'Cada página vira uma imagem: menor tamanho, sem texto pesquisável.',
-      };
+    TextMode.manterTexto =>
+      'Texto continua selecionável e pesquisável (Ctrl+F).',
+    TextMode.rasterizar =>
+      'Cada página vira uma imagem: menor tamanho, sem texto pesquisável.',
+  };
 }
 
 /// Perfis prontos de compressão.
@@ -30,20 +33,20 @@ enum CompressionPreset {
   personalizado;
 
   String get rotulo => switch (this) {
-        CompressionPreset.leve => S.presetLeve,
-        CompressionPreset.equilibrado => S.presetEquilibrado,
-        CompressionPreset.forte => S.presetForte,
-        CompressionPreset.extremo => S.presetExtremo,
-        CompressionPreset.personalizado => S.presetPersonalizado,
-      };
+    CompressionPreset.leve => S.presetLeve,
+    CompressionPreset.equilibrado => S.presetEquilibrado,
+    CompressionPreset.forte => S.presetForte,
+    CompressionPreset.extremo => S.presetExtremo,
+    CompressionPreset.personalizado => S.presetPersonalizado,
+  };
 
   String get resumo => switch (this) {
-        CompressionPreset.leve => S.presetLeveResumo,
-        CompressionPreset.equilibrado => S.presetEquilibradoResumo,
-        CompressionPreset.forte => S.presetForteResumo,
-        CompressionPreset.extremo => S.presetExtremoResumo,
-        CompressionPreset.personalizado => 'Ajustes feitos por você',
-      };
+    CompressionPreset.leve => S.presetLeveResumo,
+    CompressionPreset.equilibrado => S.presetEquilibradoResumo,
+    CompressionPreset.forte => S.presetForteResumo,
+    CompressionPreset.extremo => S.presetExtremoResumo,
+    CompressionPreset.personalizado => 'Ajustes feitos por você',
+  };
 }
 
 /// Motor que executa a compressão.
@@ -54,11 +57,11 @@ enum EngineKind {
   qpdf;
 
   String get rotulo => switch (this) {
-        EngineKind.automatico => S.motorAutomatico,
-        EngineKind.nativo => S.motorNativo,
-        EngineKind.ghostscript => S.motorGhostscript,
-        EngineKind.qpdf => S.motorQpdf,
-      };
+    EngineKind.automatico => S.motorAutomatico,
+    EngineKind.nativo => S.motorNativo,
+    EngineKind.ghostscript => S.motorGhostscript,
+    EngineKind.qpdf => S.motorQpdf,
+  };
 
   /// Motores externos podem não estar instalados.
   bool get externo => this == EngineKind.ghostscript || this == EngineKind.qpdf;
@@ -84,10 +87,34 @@ enum ColorMode {
   mono;
 
   String get rotulo => switch (this) {
-        ColorMode.manter => S.corManter,
-        ColorMode.cinza => S.corCinza,
-        ColorMode.mono => S.corMono,
-      };
+    ColorMode.manter => S.corManter,
+    ColorMode.cinza => S.corCinza,
+    ColorMode.mono => S.corMono,
+  };
+}
+
+/// Como o usuário escolhe a compressão. São caminhos separados de propósito:
+/// ou se escolhe a qualidade, ou se escolhe o tamanho — nunca os dois.
+enum CompressionMode {
+  porPerfil,
+  porTamanho;
+
+  String get rotulo => switch (this) {
+    CompressionMode.porPerfil => 'Por perfil de qualidade',
+    CompressionMode.porTamanho => 'Por tamanho alvo',
+  };
+
+  String get rotuloCurto => switch (this) {
+    CompressionMode.porPerfil => 'Perfil de qualidade',
+    CompressionMode.porTamanho => 'Tamanho alvo',
+  };
+
+  String get descricao => switch (this) {
+    CompressionMode.porPerfil =>
+      'Você escolhe a qualidade e o app comprime uma vez.',
+    CompressionMode.porTamanho =>
+      'Você diz o tamanho e o app busca a melhor qualidade que caiba.',
+  };
 }
 
 /// Como o tamanho alvo é distribuído quando há vários arquivos.
@@ -96,9 +123,15 @@ enum TargetScope {
   total;
 
   String get rotulo => switch (this) {
-        TargetScope.porArquivo => S.tamanhoAlvoPorArquivo,
-        TargetScope.total => S.tamanhoAlvoTotal,
-      };
+    TargetScope.porArquivo => S.tamanhoAlvoPorArquivo,
+    TargetScope.total => S.tamanhoAlvoTotal,
+  };
+
+  /// Forma curta, usada nos resumos ("alvo 5 MB por arquivo").
+  String get rotuloCurto => switch (this) {
+    TargetScope.porArquivo => 'por arquivo',
+    TargetScope.total => 'no conjunto',
+  };
 }
 
 /// Todas as opções de compressão em um só lugar.
@@ -111,7 +144,7 @@ class CompressionOptions {
     this.preset = CompressionPreset.equilibrado,
     this.textMode = TextMode.manterTexto,
     this.engine = EngineKind.automatico,
-    this.targetEnabled = false,
+    this.modo = CompressionMode.porPerfil,
     this.targetBytes = 5 * 1024 * 1024,
     this.targetScope = TargetScope.porArquivo,
     this.qualidadeMinima = 0.35,
@@ -131,8 +164,11 @@ class CompressionOptions {
   final TextMode textMode;
   final EngineKind engine;
 
-  /// Tamanho alvo (usado quando [targetEnabled]).
-  final bool targetEnabled;
+  /// Caminho escolhido: por perfil de qualidade ou por tamanho alvo.
+  final CompressionMode modo;
+
+  /// Atalho usado pelo serviço e pela interface.
+  bool get targetEnabled => modo == CompressionMode.porTamanho;
   final int targetBytes;
   final TargetScope targetScope;
 
@@ -160,29 +196,29 @@ class CompressionOptions {
   CompressionOptions comPreset(CompressionPreset novo) {
     final base = switch (novo) {
       CompressionPreset.leve => const CompressionOptions(
-          preset: CompressionPreset.leve,
-          dpi: 300,
-          jpegQuality: 92,
-          qualidadeMinima: 0.6,
-        ),
+        preset: CompressionPreset.leve,
+        dpi: 300,
+        jpegQuality: 92,
+        qualidadeMinima: 0.6,
+      ),
       CompressionPreset.equilibrado => const CompressionOptions(
-          preset: CompressionPreset.equilibrado,
-          dpi: 150,
-          jpegQuality: 82,
-          qualidadeMinima: 0.4,
-        ),
+        preset: CompressionPreset.equilibrado,
+        dpi: 150,
+        jpegQuality: 82,
+        qualidadeMinima: 0.4,
+      ),
       CompressionPreset.forte => const CompressionOptions(
-          preset: CompressionPreset.forte,
-          dpi: 120,
-          jpegQuality: 68,
-          qualidadeMinima: 0.25,
-        ),
+        preset: CompressionPreset.forte,
+        dpi: 120,
+        jpegQuality: 68,
+        qualidadeMinima: 0.25,
+      ),
       CompressionPreset.extremo => const CompressionOptions(
-          preset: CompressionPreset.extremo,
-          dpi: 96,
-          jpegQuality: 52,
-          qualidadeMinima: 0.15,
-        ),
+        preset: CompressionPreset.extremo,
+        dpi: 96,
+        jpegQuality: 52,
+        qualidadeMinima: 0.15,
+      ),
       CompressionPreset.personalizado => this,
     };
 
@@ -191,7 +227,7 @@ class CompressionOptions {
     return base.copyWith(
       textMode: textMode,
       engine: engine,
-      targetEnabled: targetEnabled,
+      modo: modo,
       targetBytes: targetBytes,
       targetScope: targetScope,
       colorMode: colorMode,
@@ -213,7 +249,7 @@ class CompressionOptions {
     CompressionPreset? preset,
     TextMode? textMode,
     EngineKind? engine,
-    bool? targetEnabled,
+    CompressionMode? modo,
     int? targetBytes,
     TargetScope? targetScope,
     double? qualidadeMinima,
@@ -232,7 +268,7 @@ class CompressionOptions {
       preset: preset ?? this.preset,
       textMode: textMode ?? this.textMode,
       engine: engine ?? this.engine,
-      targetEnabled: targetEnabled ?? this.targetEnabled,
+      modo: modo ?? this.modo,
       targetBytes: targetBytes ?? this.targetBytes,
       targetScope: targetScope ?? this.targetScope,
       qualidadeMinima: qualidadeMinima ?? this.qualidadeMinima,
@@ -253,20 +289,62 @@ class CompressionOptions {
   /// Marca como "personalizado" sempre que um ajuste fino é mexido.
   CompressionOptions personalizado() =>
       preset == CompressionPreset.personalizado
-          ? this
-          : copyWith(preset: CompressionPreset.personalizado);
+      ? this
+      : copyWith(preset: CompressionPreset.personalizado);
 
   /// Resumo curto mostrado no card do arquivo e no histórico.
   String get resumo {
     final partes = <String>[
-      preset.rotulo,
-      textMode == TextMode.manterTexto ? 'texto preservado' : 'páginas como imagem',
-      '${dpi}dpi',
-      'JPEG $jpegQuality',
+      // Ou o perfil, ou o alvo — nunca os dois.
+      if (targetEnabled)
+        'alvo ${Fmt.bytes(targetBytes)} ${targetScope.rotuloCurto}'
+      else ...[
+        preset.rotulo,
+        '${dpi}dpi',
+        'JPEG $jpegQuality',
+      ],
+      textMode == TextMode.manterTexto
+          ? 'texto preservado'
+          : 'páginas como imagem',
     ];
-    if (colorMode != ColorMode.manter) partes.add(colorMode.rotulo.toLowerCase());
-    if (targetEnabled) partes.add('alvo ${targetScope.rotulo.toLowerCase()}');
+    if (colorMode != ColorMode.manter) {
+      partes.add(colorMode.rotulo.toLowerCase());
+    }
     return partes.join(' • ');
+  }
+
+  /// Opções usadas como ponto de partida da busca por tamanho alvo.
+  ///
+  /// No modo "por tamanho" o perfil não é usado: a busca começa sempre na
+  /// melhor qualidade e desce até o piso escolhido.
+  CompressionOptions partidaDaBusca({required bool rasterizando}) => copyWith(
+    dpi: rasterizando ? 200 : 300,
+    jpegQuality: rasterizando ? 88 : 92,
+    preset: CompressionPreset.personalizado,
+  );
+
+  /// Faixa que a busca pelo tamanho alvo pode percorrer: começa no perfil
+  /// escolhido e desce até o piso de qualidade definido.
+  ///
+  /// É a mesma conta usada pelo serviço de compressão, para que a tela mostre
+  /// exatamente o que vai acontecer.
+  ({int dpiInicial, int jpegInicial, int dpiFinal, int jpegFinal})
+  get faixaDoAlvo {
+    final piso = qualidadeMinima.clamp(0.0, 1.0);
+    final dpiFinal = math.max(
+      math.max(60.0, 72 + (dpi - 72) * piso),
+      dpi * 0.28,
+    );
+    final jpegFinal = math.max(
+      math.max(25.0, 30 + (jpegQuality - 30) * piso),
+      28.0,
+    );
+    return (
+      dpiInicial: dpi,
+      jpegInicial: jpegQuality,
+      dpiFinal: dpiFinal.round(),
+      jpegFinal: jpegFinal.round(),
+    );
   }
 
   /// Estimativa grosseira de fator de tamanho por página, usada apenas para
@@ -286,24 +364,26 @@ class CompressionOptions {
   static const CompressionOptions padrao = CompressionOptions();
 
   Map<String, dynamic> toJson() => {
-        'preset': preset.name,
-        'textMode': textMode.name,
-        'engine': engine.name,
-        'target': targetEnabled,
-        'targetBytes': targetBytes,
-        'targetScope': targetScope.name,
-        'qualidadeMinima': qualidadeMinima,
-        'dpi': dpi,
-        'jpeg': jpegQuality,
-        'cor': colorMode.name,
-        'metadados': removeMetadata,
-        'marcadores': removeBookmarks,
-        'anotacoes': removeAnnotations,
-        'miniaturas': removeThumbnails,
-        'estrutura': optimizeStructure,
-        'fluxos': recompressStreams,
-        'compat': compatibilidadeAntiga,
-      };
+    'preset': preset.name,
+    'textMode': textMode.name,
+    'engine': engine.name,
+    'modo': modo.name,
+    // 'target' continua sendo gravado para leitura por versões antigas.
+    'target': targetEnabled,
+    'targetBytes': targetBytes,
+    'targetScope': targetScope.name,
+    'qualidadeMinima': qualidadeMinima,
+    'dpi': dpi,
+    'jpeg': jpegQuality,
+    'cor': colorMode.name,
+    'metadados': removeMetadata,
+    'marcadores': removeBookmarks,
+    'anotacoes': removeAnnotations,
+    'miniaturas': removeThumbnails,
+    'estrutura': optimizeStructure,
+    'fluxos': recompressStreams,
+    'compat': compatibilidadeAntiga,
+  };
 
   factory CompressionOptions.fromJson(Map<String, dynamic> json) {
     return CompressionOptions(
@@ -319,7 +399,14 @@ class CompressionOptions {
         (valor) => valor.name == json['engine'],
         orElse: () => EngineKind.automatico,
       ),
-      targetEnabled: json['target'] as bool? ?? false,
+      modo: json['modo'] != null
+          ? CompressionMode.values.firstWhere(
+              (valor) => valor.name == json['modo'],
+              orElse: () => CompressionMode.porPerfil,
+            )
+          : (json['target'] as bool? ?? false
+                ? CompressionMode.porTamanho
+                : CompressionMode.porPerfil),
       targetBytes: (json['targetBytes'] as num?)?.toInt() ?? 5 * 1024 * 1024,
       targetScope: TargetScope.values.firstWhere(
         (valor) => valor.name == json['targetScope'],

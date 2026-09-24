@@ -42,7 +42,11 @@ class PaginaLocalizada {
 
 /// Um marcador do sumário.
 class MarcadorPdf {
-  const MarcadorPdf({required this.titulo, required this.pagina, this.nivel = 0});
+  const MarcadorPdf({
+    required this.titulo,
+    required this.pagina,
+    this.nivel = 0,
+  });
 
   final String titulo;
 
@@ -267,8 +271,7 @@ class PdfReader {
       throw PdfSyntaxException('fluxo xref sem /W');
     }
     final larguras = [
-      for (final item in w.items)
-        item is PdfNumber ? item.comoInteiro : 0,
+      for (final item in w.items) item is PdfNumber ? item.comoInteiro : 0,
     ];
     while (larguras.length < 3) {
       larguras.add(0);
@@ -296,8 +299,11 @@ class PdfReader {
         if (posicao + tamanhoEntrada > dados.length) return;
         final tipo = _lerCampo(dados, posicao, larguras[0], padrao: 1);
         final campo2 = _lerCampo(dados, posicao + larguras[0], larguras[1]);
-        final campo3 =
-            _lerCampo(dados, posicao + larguras[0] + larguras[1], larguras[2]);
+        final campo3 = _lerCampo(
+          dados,
+          posicao + larguras[0] + larguras[1],
+          larguras[2],
+        );
         posicao += tamanhoEntrada;
 
         final numero = inicio + i;
@@ -307,10 +313,7 @@ class PdfReader {
           case 1:
             _xref[numero] = _EntradaXref(offset: campo2, geracao: campo3);
           case 2:
-            _xref[numero] = _EntradaXref(
-              objStm: campo2,
-              indiceStm: campo3,
-            );
+            _xref[numero] = _EntradaXref(objStm: campo2, indiceStm: campo3);
           default:
             _xref[numero] = _EntradaXref(livre: true, geracao: campo3);
         }
@@ -379,9 +382,7 @@ class PdfReader {
     }
 
     if (!trailer.tem('Root') && dictsComCatalogo.isNotEmpty) {
-      trailer = trailer.copiarCom({
-        'Root': PdfRef(dictsComCatalogo.last),
-      });
+      trailer = trailer.copiarCom({'Root': PdfRef(dictsComCatalogo.last)});
     }
 
     // Melhora o trailer com o último dict "trailer" encontrado no arquivo.
@@ -626,7 +627,13 @@ class PdfReader {
     }
 
     for (final filho in lista.items) {
-      _percorrerArvore(filho, destino, visitados, profundidade + 1, herdadosAqui);
+      _percorrerArvore(
+        filho,
+        destino,
+        visitados,
+        profundidade + 1,
+        herdadosAqui,
+      );
     }
   }
 
@@ -688,14 +695,11 @@ class PdfReader {
 
     while (atual is PdfDict && contador < 5000 && nivel < 16) {
       contador++;
-      final titulo =
-          resolver(atual['Title']) is PdfString
-              ? (resolver(atual['Title']) as PdfString).texto.trim()
-              : '(sem título)';
+      final titulo = resolver(atual['Title']) is PdfString
+          ? (resolver(atual['Title']) as PdfString).texto.trim()
+          : '(sem título)';
       final pagina = _paginaDoDestino(atual, mapaPaginas);
-      destino.add(
-        MarcadorPdf(titulo: titulo, pagina: pagina, nivel: nivel),
-      );
+      destino.add(MarcadorPdf(titulo: titulo, pagina: pagina, nivel: nivel));
 
       final temFilhos = atual.tem('First');
       if (temFilhos) {
@@ -900,8 +904,8 @@ class PdfReader {
         final acima = i < anterior.length ? anterior[i] : 0;
         final cimaEsquerda =
             i >= bytesPorPixel && i - bytesPorPixel < anterior.length
-                ? anterior[i - bytesPorPixel]
-                : 0;
+            ? anterior[i - bytesPorPixel]
+            : 0;
         var valor = linha[i];
         switch (tipo) {
           case 0:
@@ -932,7 +936,11 @@ class PdfReader {
     final linhaBytes = colunas * cores;
     if (linhaBytes <= 0) return dados;
     final resultado = Uint8List(dados.length);
-    for (var linha = 0; linha + linhaBytes <= dados.length; linha += linhaBytes) {
+    for (
+      var linha = 0;
+      linha + linhaBytes <= dados.length;
+      linha += linhaBytes
+    ) {
       for (var i = 0; i < linhaBytes; i++) {
         final valor = dados[linha + i];
         resultado[linha + i] = i >= cores
@@ -1047,7 +1055,8 @@ class _Lexer {
 
   bool get acabou => posicao >= dados.length;
 
-  int? _byteAt(int indice) => indice >= 0 && indice < dados.length ? dados[indice] : null;
+  int? _byteAt(int indice) =>
+      indice >= 0 && indice < dados.length ? dados[indice] : null;
 
   bool _ehEspaco(int byte) =>
       byte == _nulo ||
@@ -1202,8 +1211,9 @@ class _Lexer {
     }
     pularEspacos();
     if (posicao < dados.length &&
-        dados[posicao] == 0x52 // R
-        ) {
+        dados[posicao] ==
+            0x52 // R
+            ) {
       final proximo = _byteAt(posicao + 1);
       if (proximo == null || _ehEspaco(proximo) || _ehDelimitador(proximo)) {
         posicao++;

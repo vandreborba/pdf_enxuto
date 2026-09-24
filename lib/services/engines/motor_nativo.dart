@@ -59,12 +59,12 @@ class MotorNativo extends MotorPdf {
     if (opcoes.textMode == TextMode.manterTexto) {
       return const [
         'Sem o Ghostscript, o modo "manter texto" só limpa a estrutura: '
-        'o ganho costuma ser pequeno (mas é sem perdas).',
+            'o ganho costuma ser pequeno (mas é sem perdas).',
       ];
     }
     return const [
       'Redesenhar as páginas é mais lento e o texto deixa de ser '
-      'selecionável.',
+          'selecionável.',
     ];
   }
 
@@ -131,7 +131,8 @@ class MotorNativo extends MotorPdf {
       if (resultado.bytes.length >= bytes.length) {
         progresso(1, 'Concluído');
         return ResultadoMotor.ok(
-          aviso: 'Este PDF já estava bem otimizado: o resultado ficou do mesmo '
+          aviso:
+              'Este PDF já estava bem otimizado: o resultado ficou do mesmo '
               'tamanho (ou um pouco maior) e foi descartado.',
           detalhe: 'sem ganho',
         );
@@ -140,7 +141,8 @@ class MotorNativo extends MotorPdf {
       await _gravar(saida, resultado.bytes);
       progresso(1, 'Concluído');
       return ResultadoMotor.ok(
-        detalhe: 'objetos ${resultado.objetosOriginais} → '
+        detalhe:
+            'objetos ${resultado.objetosOriginais} → '
             '${resultado.objetosMantidos}, '
             'fluxos recomprimidos ${resultado.fluxosRecomprimidos}',
       );
@@ -149,7 +151,10 @@ class MotorNativo extends MotorPdf {
         'PDF protegido por senha: remova a proteção antes de comprimir',
       );
     } catch (erro) {
-      return ResultadoMotor.falha('Não foi possível otimizar', detalhe: '$erro');
+      return ResultadoMotor.falha(
+        'Não foi possível otimizar',
+        detalhe: '$erro',
+      );
     }
   }
 
@@ -186,10 +191,7 @@ class MotorNativo extends MotorPdf {
 
       for (var i = 0; i < total; i++) {
         cancelamento.verificar();
-        progresso(
-          i / total * 0.75,
-          'Desenhando página ${i + 1} de $total…',
-        );
+        progresso(i / total * 0.75, 'Desenhando página ${i + 1} de $total…');
 
         final pagina = documento.pages[i];
         final largura = (pagina.width * escala).round().clamp(32, 20000);
@@ -226,10 +228,7 @@ class MotorNativo extends MotorPdf {
 
         imagens.add(codificada);
         tamanhos.add(
-          _TamanhoPagina(
-            largura: pagina.width,
-            altura: pagina.height,
-          ),
+          _TamanhoPagina(largura: pagina.width, altura: pagina.height),
         );
       }
 
@@ -463,8 +462,7 @@ Uint8List _empacotarUmBit(img.Image imagem) {
     var mascara = 0x80;
     for (var x = 0; x < largura; x++) {
       final pixel = imagem.getPixel(x, y);
-      final luminancia =
-          0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b;
+      final luminancia = 0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b;
       // 0 = preto, 1 = branco (DeviceGray com 1 bit).
       if (luminancia >= 160) dados[indiceByte] |= mascara;
       mascara >>= 1;
@@ -552,10 +550,7 @@ Uint8List _montarPdf(
   );
 
   escritor.raiz = escritor.adicionar(
-    PdfDict({
-      'Type': PdfName.catalog,
-      'Pages': refPaginas,
-    }),
+    PdfDict({'Type': PdfName.catalog, 'Pages': refPaginas}),
   );
 
   return escritor.escrever();

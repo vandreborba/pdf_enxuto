@@ -296,14 +296,14 @@ class _LinhaParte extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: cores.gradienteMarca),
-                borderRadius: BorderRadius.circular(9),
+                color: cores.accent,
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
                 child: Text(
                   '${parte.indice}',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: cores.sobreAccent,
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
                   ),
@@ -718,18 +718,17 @@ class _OpcaoMetodo extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  gradient: selecionado
-                      ? LinearGradient(colors: cores.gradienteMarca)
-                      : null,
                   color: selecionado
-                      ? null
-                      : esquema.surfaceContainerHighest.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(11),
+                      ? cores.accent
+                      : esquema.surfaceContainerHighest.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(9),
                 ),
                 child: Icon(
                   detalhe.$1,
                   size: 18,
-                  color: selecionado ? Colors.white : esquema.onSurfaceVariant,
+                  color: selecionado
+                      ? cores.sobreAccent
+                      : esquema.onSurfaceVariant,
                 ),
               ),
               const SizedBox(width: 12),

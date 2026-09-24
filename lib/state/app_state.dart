@@ -98,6 +98,8 @@ class AppState extends ChangeNotifier {
   // ------------------------------------------------------------------- setup
   Future<void> iniciar() async {
     versaoApp = await ServicoAtualizacao.versaoAtual();
+    // Se o app foi fechado no meio de uma tarefa, sobrou pasta temporária.
+    unawaited(Sistema.limparTemporariosAntigos());
     await Future.wait([configuracao.carregar(), historico.carregar()]);
     await motores.detectar();
     carregando = false;
@@ -113,7 +115,7 @@ class AppState extends ChangeNotifier {
   // -------------------------------------------------------------------- fila
   /// Adiciona arquivos à fila: aceita PDFs, ignora o resto e avisa o usuário.
   Future<({int adicionados, int ignorados, int duplicados, int comProblema})>
-      adicionarCaminhos(Iterable<String> caminhos) async {
+  adicionarCaminhos(Iterable<String> caminhos) async {
     final existentes = fila.map((item) => item.chave).toSet();
     var ignorados = 0;
     var duplicados = 0;
@@ -125,13 +127,14 @@ class AppState extends ChangeNotifier {
     for (final caminho in caminhos) {
       final tipo = FileSystemEntity.typeSync(caminho);
       if (tipo == FileSystemEntityType.directory) {
-        final encontrados = Directory(caminho)
-            .listSync(recursive: true, followLinks: false)
-            .whereType<File>()
-            .where((arquivo) => arquivo.path.toLowerCase().endsWith('.pdf'))
-            .map((arquivo) => arquivo.path)
-            .toList()
-          ..sort();
+        final encontrados =
+            Directory(caminho)
+                .listSync(recursive: true, followLinks: false)
+                .whereType<File>()
+                .where((arquivo) => arquivo.path.toLowerCase().endsWith('.pdf'))
+                .map((arquivo) => arquivo.path)
+                .toList()
+              ..sort();
         arquivos.addAll(encontrados);
       } else if (tipo == FileSystemEntityType.file &&
           caminho.toLowerCase().endsWith('.pdf')) {
@@ -293,8 +296,8 @@ class AppState extends ChangeNotifier {
         item.status = resultado.sucesso
             ? JobStatus.concluido
             : (resultado.erro == S.erroCancelado
-                ? JobStatus.cancelado
-                : JobStatus.falhou);
+                  ? JobStatus.cancelado
+                  : JobStatus.falhou);
         item.progresso = 1;
         item.etapa = '';
         concluidos++;
@@ -344,7 +347,7 @@ class AppState extends ChangeNotifier {
       await Sistema.notificar(
         S.appName,
         'Compressão concluída: ${novidades.length} arquivo(s), '
-            'economia de ${_formatarBytes(economizado)}.',
+        'economia de ${_formatarBytes(economizado)}.',
       );
     }
 
@@ -416,8 +419,8 @@ class AppState extends ChangeNotifier {
       item.status = resultado.sucesso
           ? JobStatus.concluido
           : (resultado.erro == S.erroCancelado
-              ? JobStatus.cancelado
-              : JobStatus.falhou);
+                ? JobStatus.cancelado
+                : JobStatus.falhou);
       item.progresso = 1;
       item.etapa = '';
 
@@ -427,7 +430,8 @@ class AppState extends ChangeNotifier {
           quando: DateTime.now(),
           kind: TaskKind.dividir,
           resultado: resultado,
-          resumo: '${opcoesDivisao.metodo.rotulo} • '
+          resumo:
+              '${opcoesDivisao.metodo.rotulo} • '
               '${plano.partes.length} ${S.partesPrevistas}',
         ),
       );
@@ -497,9 +501,11 @@ class AppState extends ChangeNotifier {
             .fold<int>(0, (soma, item) => soma + item.arquivo.bytes);
         final proporcao =
             estimativas.fold<int>(0, (soma, valor) => soma + valor) /
-                totalOriginal;
-        previsaoSimulada =
-            (totalBytesFila * proporcao).round().clamp(1024, totalBytesFila);
+            totalOriginal;
+        previsaoSimulada = (totalBytesFila * proporcao).round().clamp(
+          1024,
+          totalBytesFila,
+        );
       }
     } finally {
       simulando = false;
