@@ -109,8 +109,9 @@ class AccentPalette {
   List<Color> get gradiente => [primaria, terciaria, secundaria];
 
   static const List<AccentPalette> todas = [
-    AccentPalette('Aurora', Color(0xFF7C3AED), Color(0xFFC026D3), Color(0xFF22D3EE)),
+    // A primeira da lista é a paleta padrão do aplicativo.
     AccentPalette('Papel & Ouro', Color(0xFF92400E), Color(0xFFB45309), Color(0xFFEAB308)),
+    AccentPalette('Aurora', Color(0xFF7C3AED), Color(0xFFC026D3), Color(0xFF22D3EE)),
     AccentPalette('Esmeralda', Color(0xFF047857), Color(0xFF10B981), Color(0xFF84CC16)),
     AccentPalette('Cereja', Color(0xFF9F1239), Color(0xFFE11D48), Color(0xFFFB923C)),
     AccentPalette('Petróleo', Color(0xFF0F766E), Color(0xFF0891B2), Color(0xFF38BDF8)),
@@ -352,8 +353,18 @@ class AppTheme {
   }
 
   static TextTheme _textos(ColorScheme scheme) {
-    final base = Typography.material2021(colorScheme: scheme).black;
-    return base.copyWith(
+    // A tipografia certa para cada brilho: usar a "clara" no tema escuro é o
+    // que mantém o texto legível sobre o fundo escuro.
+    final tipografia = Typography.material2021(colorScheme: scheme);
+    final base = scheme.brightness == Brightness.dark
+        ? tipografia.white
+        : tipografia.black;
+    return base
+        .apply(
+          bodyColor: scheme.onSurface,
+          displayColor: scheme.onSurface,
+        )
+        .copyWith(
       displaySmall: base.displaySmall?.copyWith(
         fontWeight: FontWeight.w700,
         letterSpacing: -0.8,

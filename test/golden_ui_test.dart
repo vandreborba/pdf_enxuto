@@ -258,6 +258,14 @@ void main() {
     );
   });
 
+  testWidgets('captura do tema escuro', (tester) async {
+    final estado = await prepararEstado(tester);
+    await estado.atualizarConfig(
+      estado.config.copyWith(tema: ThemeMode.dark),
+    );
+    await capturar(tester, estado, 'tela-escura');
+  });
+
   testWidgets('capturas das paletas de cor', (tester) async {
     final estado = await prepararEstado(tester, comFila: false);
 
