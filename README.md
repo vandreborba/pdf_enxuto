@@ -50,9 +50,16 @@ Se um motor falhar, o app cai automaticamente para o próximo — você nunca fi
 |---|---|
 | ![Dividir](assets/screenshot/tela-dividir.png) | ![Histórico](assets/screenshot/tela-historico.png) |
 
-| Configurações | Paletas de cor |
+| Configurações | Tema escuro |
 |---|---|
-| ![Configurações](assets/screenshot/tela-configuracoes.png) | ![Paletas](assets/branding/paletas.png) |
+| ![Configurações](assets/screenshot/tela-configuracoes.png) | ![Tema escuro](assets/screenshot/tela-escura.png) |
+
+### Paletas de cor
+
+Oito combinações prontas, trocadas em **Configurações → Aparência** (a padrão é a
+"Papel & Ouro"):
+
+![Paletas](assets/branding/paletas.png)
 
 ## Instalação
 
