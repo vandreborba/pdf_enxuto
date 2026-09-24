@@ -1,3 +1,4 @@
+@Tags(['golden'])
 // Gera as capturas de tela usadas no README e serve de teste de regressão
 // visual do layout.
 //

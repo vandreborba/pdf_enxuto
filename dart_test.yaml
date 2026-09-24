@@ -1,0 +1,7 @@
+# Declaração das etiquetas usadas nos testes.
+tags:
+  golden:
+    # Testes que comparam imagens (capturas do README). Dependem das fontes
+    # instaladas no sistema, então rodam só no Linux de desenvolvimento:
+    #   flutter test --exclude-tags golden   (sem eles)
+    #   flutter test --update-goldens        (regera as capturas)
