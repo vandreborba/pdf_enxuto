@@ -188,7 +188,13 @@ echo ""
 echo -e "${YELLOW}=== Criando release $TAG no GitHub ===${NC}"
 
 NOTES_FILE="$(mktemp)"
-cat > "$NOTES_FILE" <<EOF
+NOTAS_MANUAIS="$SCRIPT_DIR/.sh/notas/${TAG}.md"
+
+if [[ -f "$NOTAS_MANUAIS" ]]; then
+    # Notas escritas à mão para esta versão (.sh/notas/vX.Y.Z.md).
+    cat "$NOTAS_MANUAIS" > "$NOTES_FILE"
+else
+    cat > "$NOTES_FILE" <<EOF
 ## PDF Enxuto $TAG
 
 Compressor e divisor de PDF **100% local**: nada sai do seu computador.
@@ -214,6 +220,7 @@ sudo apt install ghostscript qpdf
 
 O próprio aplicativo mostra essas instruções em **Configurações → Motores**.
 EOF
+fi
 
 if gh release view "$TAG" --repo "$GITHUB_REPO" >/dev/null 2>&1; then
     echo -e "${RED}ERRO: release $TAG já existe no GitHub.${NC}"

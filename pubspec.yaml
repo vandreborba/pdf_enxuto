@@ -6,7 +6,7 @@ issue_tracker: https://github.com/vandreborba/pdf_enxuto/issues
 publish_to: 'none'
 
 # Versão do aplicativo. Também usada pelos scripts .sh e pelo auto-update.
-version: 1.0.1+2
+version: 1.0.2+3
 
 environment:
   sdk: ^3.12.2
