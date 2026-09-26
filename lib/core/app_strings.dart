@@ -8,7 +8,8 @@ class S {
 
   // ------------------------------------------------------------------ Geral
   static const appName = 'PDF Enxuto';
-  static const tagline = 'Comprima e divida PDFs sem sair do seu computador';
+  static const tagline =
+      'Comprima, divida e converta PDFs sem sair do seu computador';
   static const ok = 'Entendi';
   static const cancelar = 'Cancelar';
   static const fechar = 'Fechar';
@@ -209,6 +210,61 @@ class S {
       'Isso apaga apenas a lista de tarefas. Nenhum arquivo será removido.';
   static const mostrarNoGerenciador = 'Mostrar no gerenciador de arquivos';
   static const repetirTarefa = 'Repetir com as mesmas opções';
+
+  // -------------------------------------------------------------- Planilha
+  static const navPlanilha = 'Para planilha';
+  static const planilhaTitulo = 'Converter em planilha';
+  static const planilhaSubtitulo =
+      'Transforme as tabelas do PDF em planilha (Excel/Calc) ou CSV, prontas '
+      'para somar, ordenar e filtrar.';
+  static const planilhaAgora = 'Converter agora';
+  static const planilhaConvertendo = 'Convertendo…';
+  static const planilhaArquivos = 'Arquivos';
+  static const planilhaFormato = 'Formato do arquivo';
+  static const planilhaModoLeitura = 'Como ler o PDF';
+  static const planilhaSeparacao = 'Separação das colunas';
+  static const planilhaOrganizacao = 'Como organizar as abas';
+  static const planilhaOpcoes = 'Detalhes da conversão';
+  static const planilhaCabecalho = 'Primeira linha é o título das colunas';
+  static const planilhaIgnorarCabecalho =
+      'Ignorar cabeçalho e rodapé repetidos';
+  static const planilhaProteger = 'Proteger contra fórmulas';
+  static const planilhaSeparador = 'Separador do CSV';
+  static const planilhaSeparadorPontoVirgula = 'Ponto e vírgula (;)';
+  static const planilhaSeparadorVirgula = 'Vírgula (,)';
+  static const planilhaPrevia = 'Prévia das tabelas';
+  static const planilhaPreviaVazio = 'Adicione um PDF para ver as tabelas';
+  static const planilhaPreviaDica =
+      'A prévia mostra as primeiras páginas do primeiro arquivo da fila. É o '
+      'mesmo caminho da conversão: o que você vê aqui é o que sai na planilha.';
+  static const planilhaPreviaLendo = 'Procurando tabelas…';
+  static const planilhaPreviaNada =
+      'Não encontramos tabelas nas primeiras páginas. Dá para converter mesmo '
+      'assim: o texto sai em uma coluna só (modo "Texto corrido").';
+  static const planilhaPreviaDigitalizada =
+      'Estas páginas são imagens (digitalização), sem texto para ler.';
+  static const planilhaPreviaResumo = 'tabelas encontradas';
+  static const planilhaPreviaLinhas = 'linhas';
+  static const planilhaPreviaColunas = 'colunas';
+  static const planilhaPreviaPagina = 'Página %d';
+  static const planilhaOndeSalvar = 'Onde salvar';
+  static const planilhaSemPaginas =
+      'Não foi possível ler as páginas deste PDF.';
+  static const planilhaDigitalizada =
+      'Este PDF é uma imagem (digitalização): não tem texto para converter. '
+      'Seria preciso um programa de OCR antes — o PDF Enxuto não faz OCR.';
+  static const planilhaSemTabela =
+      'Não sobrou nenhum conteúdo para gravar. O PDF pode estar em branco.';
+  static const planilhaFalhou = 'Não foi possível converter';
+  static const planilhaMotorIndisponivel =
+      'O leitor de PDF do aplicativo não pôde ser carregado. Feche e abra o '
+      'PDF Enxuto novamente; se continuar, reinstale o aplicativo.';
+  static const planilhaPaginasSemTabela =
+      'Em algumas páginas não encontramos tabela: o texto delas entrou em uma '
+      'coluna só, para nada se perder.';
+  static const planilhaAvisoXlsx =
+      'O XLSX abre no Excel e no LibreOffice Calc. O CSV abre em praticamente '
+      'qualquer programa, mas é texto puro.';
 
   // ------------------------------------------------------- Configurações
   static const configTitulo = 'Configurações';
@@ -533,4 +589,105 @@ class Ajuda {
       'Se o Ghostscript ou o qpdf estiverem instalados no sistema, o app passa a '
       'usá-los quando isso trouxer vantagem — é só instalar e clicar em '
       '"Procurar novamente".';
+
+  // ------------------------------------------------------------- Planilha
+  static const planilhaModo =
+      'Um PDF não guarda tabelas: guarda pedaços de texto, cada um com uma '
+      'posição na página. Converter em planilha é descobrir, por essas '
+      'posições, o que era linha e o que era coluna.\n\n'
+      '• Detectar tabelas: o app procura os blocos em que várias linhas têm '
+      'colunas alinhadas e reconstrói a grade. É o modo certo para extratos, '
+      'notas fiscais, relatórios, listagens e declarações.\n'
+      '• Texto corrido: cada linha do PDF vira uma linha da planilha, em uma '
+      'coluna só. Serve para PDFs que não são tabela (um contrato, uma carta), '
+      'quando você só quer o texto em algo editável.\n\n'
+      'Confira sempre a prévia: ela mostra as tabelas que o app encontrou nas '
+      'primeiras páginas antes de você converter.';
+
+  static const planilhaColunas =
+      'Controla o quanto o app separa as colunas.\n\n'
+      'Um espaço entre duas palavras pode ser o espaço dentro de uma célula '
+      '("VANDRÉ BORBA") ou a fronteira entre duas colunas. Não existe como '
+      'saber com certeza — então quem decide é você:\n\n'
+      '• Menos colunas: só separa quando o vão é grande. Use quando o app está '
+      'cortando no meio do que era uma célula só.\n'
+      '• Equilibrado: o padrão. Funciona bem na maioria dos extratos e '
+      'listagens.\n'
+      '• Mais colunas: separa mais, inclusive colunas de números alinhados à '
+      'direita (débito, crédito, saldo). Use quando o app está deixando duas '
+      'colunas grudadas.\n\n'
+      'Cada tabela tem o seu jeito: mude a opção e olhe a prévia, que muda na '
+      'hora.\n\n'
+      'Limite honesto: colunas de números muito próximas, alinhadas à direita '
+      '(débito, crédito e saldo, por exemplo), às vezes saem juntas na mesma '
+      'célula. Nesse caso tente "Mais colunas" — e, se ainda assim não '
+      'separar, separe na própria planilha, ou exporte em CSV e ajuste onde '
+      'for usar.';
+
+  static const planilhaEscopo =
+      'Como as tabelas viram abas (ou arquivos).\n\n'
+      '• Uma aba por tabela: cada tabela detectada vira uma aba própria. É o '
+      'mais fiel ao documento.\n'
+      '• Uma aba por página: tudo o que está na mesma página fica junto.\n'
+      '• Tudo junto: o PDF inteiro vira uma aba só, com as tabelas separadas '
+      'por uma linha em branco e a página indicada.\n\n'
+      'No CSV não existem abas: cada aba vira um arquivo. Se você quer um '
+      'único CSV, escolha "Tudo junto".';
+
+  static const planilhaFormato =
+      'O que será gravado.\n\n'
+      '• Planilha (XLSX): o formato do Excel, aberto também pelo LibreOffice '
+      'Calc. Aceita várias abas, prende a primeira linha como título e guarda '
+      'números e datas como números e datas de verdade — dá para somar, '
+      'ordenar e filtrar. Valores com R\$ viram número (para somar) e continuam '
+      'aparecendo com o símbolo.\n'
+      '• CSV: texto puro, uma tabela por arquivo, aceito por praticamente '
+      'qualquer programa. Aqui tudo é texto.\n\n'
+      'Para usar no dia a dia, o XLSX costuma ser melhor. O CSV é o mais '
+      'compatível, e sai em UTF-8 com BOM e ponto e vírgula, que é o que o '
+      'Excel em português espera.';
+
+  static const planilhaCabecalho =
+      'Marca a primeira linha como título das colunas: na planilha ela fica em '
+      'negrito e congelada no topo — ao rolar para baixo, os títulos continuam '
+      'à vista.\n\n'
+      'Desligue quando a primeira linha já for um dado (uma tabela sem '
+      'cabeçalho).';
+
+  static const planilhaIgnorarCabecalho =
+      'Relatórios costumam repetir o nome da empresa no topo e "Página 3 de '
+      '23" no pé de cada página.\n\n'
+      'Se a mesma linha aparece na primeira (ou na última) posição da maioria '
+      'das páginas, o app entende que aquilo é moldura e tira da planilha. '
+      'Números são comparados de forma genérica, então "Página 3 de 23" e '
+      '"Página 7 de 23" contam como a mesma linha.\n\n'
+      'Desligue se você quiser o documento exatamente como está no PDF.';
+
+  static const planilhaProteger =
+      'Uma célula que começa com =, +, @ ou uma tabulação pode ser entendida '
+      'como fórmula ao abrir o arquivo em outro programa — inclusive para '
+      'executar comandos na sua máquina.\n\n'
+      'Com esta opção ligada, o app marca essas células como texto, e o que '
+      'aparece na tela continua igual. Valores negativos ("-1.234,56") e '
+      'telefones ("+55") não são estragados: números continuam números.';
+
+  static const planilhaSeparador =
+      'Qual caractere separa as colunas do CSV.\n\n'
+      '• Ponto e vírgula (;): o padrão do Excel em português, porque a vírgula '
+      'já é usada para os centavos. Com vírgula como separador, "1.234,56" '
+      'viraria duas colunas.\n'
+      '• Vírgula (,): o padrão internacional e o que a maioria dos programas '
+      'de planilha e bancos de dados espera.\n\n'
+      'Se o arquivo abrir com tudo em uma coluna só, troque esta opção: é '
+      'quase sempre isso.';
+
+  static const planilhaDigitalizada =
+      'Para virar planilha, o PDF precisa ter texto de verdade. Uma '
+      'digitalização (foto ou scanner) é só uma imagem: para ler seria preciso '
+      'OCR, e o PDF Enxuto não faz OCR — ele lê o texto que já existe no '
+      'arquivo, sem chutar.\n\n'
+      'Como saber: abra o PDF e tente selecionar uma palavra com o mouse. Se '
+      'não conseguir selecionar nada, é digitalização.\n\n'
+      'O caminho, nesse caso, é passar o PDF por um programa de OCR antes de '
+      'converter.';
 }

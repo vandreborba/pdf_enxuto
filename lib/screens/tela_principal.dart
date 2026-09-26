@@ -23,11 +23,13 @@ import 'package:pdf_enxuto/screens/pagina_comprimir.dart';
 import 'package:pdf_enxuto/screens/pagina_config.dart';
 import 'package:pdf_enxuto/screens/pagina_dividir.dart';
 import 'package:pdf_enxuto/screens/pagina_historico.dart';
+import 'package:pdf_enxuto/screens/pagina_planilha.dart';
 
 /// As telas do app.
 enum SecaoApp {
   comprimir(S.navComprimir, Icons.compress_rounded),
   dividir(S.navDividir, Icons.call_split_rounded),
+  planilha(S.navPlanilha, Icons.table_chart_outlined),
   historico(S.navHistorico, Icons.history_rounded),
   configuracoes(S.navConfiguracoes, Icons.settings_rounded);
 
@@ -130,6 +132,8 @@ class _TelaPrincipalState extends State<TelaPrincipal> with WindowListener {
         const SingleActivator(LogicalKeyboardKey.digit2, control: true): () =>
             setState(() => _secao = SecaoApp.dividir),
         const SingleActivator(LogicalKeyboardKey.digit3, control: true): () =>
+            setState(() => _secao = SecaoApp.planilha),
+        const SingleActivator(LogicalKeyboardKey.digit4, control: true): () =>
             setState(() => _secao = SecaoApp.historico),
         const SingleActivator(LogicalKeyboardKey.comma, control: true): () =>
             setState(() => _secao = SecaoApp.configuracoes),
@@ -232,6 +236,7 @@ class _TelaPrincipalState extends State<TelaPrincipal> with WindowListener {
     return switch (_secao) {
       SecaoApp.comprimir => PaginaComprimir(estado: estado),
       SecaoApp.dividir => PaginaDividir(estado: estado),
+      SecaoApp.planilha => PaginaPlanilha(estado: estado),
       SecaoApp.historico => PaginaHistorico(estado: estado),
       SecaoApp.configuracoes => PaginaConfiguracoes(estado: estado),
     };
@@ -251,10 +256,15 @@ class _TelaPrincipalState extends State<TelaPrincipal> with WindowListener {
 
   Future<void> _processar() async {
     if (!estado.temAlgoParaProcessar) return;
-    if (_secao == SecaoApp.dividir) {
-      await estado.dividirTudo();
-    } else {
-      await estado.comprimirTudo();
+    switch (_secao) {
+      case SecaoApp.dividir:
+        await estado.dividirTudo();
+      case SecaoApp.planilha:
+        await estado.converterTudo();
+      case SecaoApp.comprimir:
+      case SecaoApp.historico:
+      case SecaoApp.configuracoes:
+        await estado.comprimirTudo();
     }
   }
 
@@ -488,53 +498,6 @@ class _BarraLateral extends StatelessWidget {
               onTap: () => onMudar(item),
             ),
           const Spacer(),
-          if (estado.historico.totalEconomizado > 0)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: cores.sucesso.withValues(alpha: 0.09),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: cores.sucesso.withValues(alpha: 0.25),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.savings_outlined,
-                          size: 15,
-                          color: cores.sucesso,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Já economizou',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: cores.sucesso,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    ContadorAnimado(
-                      valor: estado.historico.totalEconomizado,
-                      formatador: Fmt.bytes,
-                      estilo: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: cores.sucesso,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 14, 12, 16),
             child: Column(
@@ -630,14 +593,22 @@ class _ItemNavegacaoState extends State<_ItemNavegacao> {
                     : (ativo ? cores.accent : esquema.onSurfaceVariant),
               ),
               const SizedBox(width: 12),
-              Text(
-                widget.secao.rotulo,
-                style: TextStyle(
-                  fontWeight: widget.selecionada
-                      ? FontWeight.w700
-                      : FontWeight.w600,
-                  fontSize: 14,
-                  color: widget.selecionada ? Colors.white : esquema.onSurface,
+              // Expandido para o rótulo nunca estourar a largura da barra
+              // (fonte do sistema maior, idioma com palavras longas…).
+              Expanded(
+                child: Text(
+                  widget.secao.rotulo,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: widget.selecionada
+                        ? FontWeight.w700
+                        : FontWeight.w600,
+                    fontSize: 14,
+                    color: widget.selecionada
+                        ? Colors.white
+                        : esquema.onSurface,
+                  ),
                 ),
               ),
             ],
@@ -668,6 +639,7 @@ class _Cabecalho extends StatelessWidget {
     final (titulo, subtitulo) = switch (secao) {
       SecaoApp.comprimir => (S.comprimirTitulo, S.comprimirSubtitulo),
       SecaoApp.dividir => (S.dividirTitulo, S.dividirSubtitulo),
+      SecaoApp.planilha => (S.planilhaTitulo, S.planilhaSubtitulo),
       SecaoApp.historico => (S.historicoTitulo, S.historicoSubtitulo),
       SecaoApp.configuracoes => (S.configTitulo, S.configSubtitulo),
     };
@@ -692,7 +664,9 @@ class _Cabecalho extends StatelessWidget {
               ],
             ),
           ),
-          if (secao == SecaoApp.comprimir || secao == SecaoApp.dividir) ...[
+          if (secao == SecaoApp.comprimir ||
+              secao == SecaoApp.dividir ||
+              secao == SecaoApp.planilha) ...[
             OutlinedButton.icon(
               onPressed: estado.processando ? null : onAbrir,
               icon: const Icon(Icons.add_rounded, size: 18),
@@ -708,9 +682,11 @@ class _Cabecalho extends StatelessWidget {
             else
               BotaoGradiente(
                 rotulo: _rotuloAcao(),
-                icone: secao == SecaoApp.dividir
-                    ? Icons.call_split_rounded
-                    : Icons.compress_rounded,
+                icone: switch (secao) {
+                  SecaoApp.dividir => Icons.call_split_rounded,
+                  SecaoApp.planilha => Icons.table_chart_outlined,
+                  _ => Icons.compress_rounded,
+                },
                 onPressed: estado.temAlgoParaProcessar ? onProcessar : null,
               ),
           ],
@@ -722,9 +698,17 @@ class _Cabecalho extends StatelessWidget {
   String _rotuloAcao() {
     final quantidade = estado.itensValidos.length;
     if (quantidade == 0) {
-      return secao == SecaoApp.dividir ? S.dividirAgora : S.comprimirAgora;
+      return switch (secao) {
+        SecaoApp.dividir => S.dividirAgora,
+        SecaoApp.planilha => S.planilhaAgora,
+        _ => S.comprimirAgora,
+      };
     }
-    final acao = secao == SecaoApp.dividir ? 'Dividir' : 'Comprimir';
+    final acao = switch (secao) {
+      SecaoApp.dividir => 'Dividir',
+      SecaoApp.planilha => 'Converter',
+      _ => 'Comprimir',
+    };
     return '$acao $quantidade ${quantidade == 1 ? 'arquivo' : 'arquivos'}';
   }
 }

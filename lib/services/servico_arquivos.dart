@@ -9,18 +9,46 @@ class ServicoArquivos {
   /// Sufixo usado nas compressões: "relatorio.pdf" → "relatorio_enxuto.pdf".
   static const String sufixoComprimido = '_enxuto';
 
+  /// Separa pasta, nome-base (sem extensão) e extensão (com o ponto) de um
+  /// caminho. Ponto de verdade: os três usos de nome de arquivo passam aqui.
+  static (String pasta, String base, String extensao) _dividirCaminho(
+    String caminho,
+  ) {
+    final arquivo = File(caminho);
+    final nome = arquivo.uri.pathSegments.last;
+    final ponto = nome.lastIndexOf('.');
+    return (
+      arquivo.parent.path,
+      ponto > 0 ? nome.substring(0, ponto) : nome,
+      ponto > 0 ? nome.substring(ponto) : '',
+    );
+  }
+
   /// Sugere o caminho de saída para a compressão.
   static String caminhoComprimido(
     String entrada,
     String? pastaSaida, {
     String sufixo = sufixoComprimido,
   }) {
-    final arquivo = File(entrada);
-    final nome = arquivo.uri.pathSegments.last;
-    final ponto = nome.lastIndexOf('.');
-    final base = ponto > 0 ? nome.substring(0, ponto) : nome;
-    final pasta = pastaSaida ?? arquivo.parent.path;
-    return '$pasta${Platform.pathSeparator}${Fmt.nomeSeguro('$base$sufixo')}.pdf';
+    final (pasta, base, _) = _dividirCaminho(entrada);
+    final destino = pastaSaida ?? pasta;
+    return '$destino${Platform.pathSeparator}${Fmt.nomeSeguro('$base$sufixo')}.pdf';
+  }
+
+  /// Caminho de saída para outro formato (planilha, CSV): troca a extensão e,
+  /// se pedido, acrescenta algo ao nome ("extrato - p3.csv").
+  static String caminhoSaida(
+    String entrada,
+    String? pastaSaida,
+    String extensao, {
+    String? acrescimo,
+  }) {
+    final (pasta, base, _) = _dividirCaminho(entrada);
+    final destino = pastaSaida ?? pasta;
+    final completo = acrescimo == null || acrescimo.trim().isEmpty
+        ? base
+        : '$base - ${acrescimo.trim()}';
+    return '$destino${Platform.pathSeparator}${Fmt.nomeSeguro(completo)}.$extensao';
   }
 
   /// Monta o nome de uma parte a partir do padrão escolhido.
@@ -65,11 +93,7 @@ class ServicoArquivos {
   }) {
     if (sobrescrever || !File(caminho).existsSync()) return null;
 
-    final pasta = File(caminho).parent.path;
-    final nome = File(caminho).uri.pathSegments.last;
-    final ponto = nome.lastIndexOf('.');
-    final base = ponto > 0 ? nome.substring(0, ponto) : nome;
-    final extensao = ponto > 0 ? nome.substring(ponto) : '';
+    final (pasta, base, extensao) = _dividirCaminho(caminho);
 
     for (var i = 1; i < 9999; i++) {
       final tentativa = '$pasta${Platform.pathSeparator}$base ($i)$extensao';

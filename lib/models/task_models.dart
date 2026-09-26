@@ -6,11 +6,20 @@ import 'package:pdf_enxuto/models/page_range.dart';
 /// O que a tarefa está fazendo.
 enum TaskKind {
   comprimir,
-  dividir;
+  dividir,
+  planilha;
 
-  String get rotulo => this == TaskKind.comprimir ? 'Compressão' : 'Divisão';
-  String get particulo =>
-      this == TaskKind.comprimir ? 'comprimido' : 'dividido';
+  String get rotulo => switch (this) {
+    TaskKind.comprimir => 'Compressão',
+    TaskKind.dividir => 'Divisão',
+    TaskKind.planilha => 'Conversão',
+  };
+
+  String get particulo => switch (this) {
+    TaskKind.comprimir => 'comprimido',
+    TaskKind.dividir => 'dividido',
+    TaskKind.planilha => 'convertido',
+  };
 }
 
 /// Situação de um item da fila.
@@ -36,6 +45,7 @@ class ItemResult {
     this.aviso,
     this.erro,
     this.alvoAtingido,
+    this.detalhe,
   });
 
   final String entrada;
@@ -49,6 +59,10 @@ class ItemResult {
 
   /// Preenchido só quando havia tamanho alvo.
   final bool? alvoAtingido;
+
+  /// Informação curta do resultado, do jeito que o usuário entende
+  /// (por exemplo "4 abas" na conversão para planilha).
+  final String? detalhe;
 
   bool get sucesso => erro == null;
 
@@ -69,6 +83,7 @@ class ItemResult {
     'aviso': aviso,
     'erro': erro,
     'alvoOk': alvoAtingido,
+    'detalhe': detalhe,
   };
 
   static ItemResult fromJson(Map<String, dynamic> json) => ItemResult(
@@ -81,6 +96,7 @@ class ItemResult {
     aviso: json['aviso'] as String?,
     erro: json['erro'] as String?,
     alvoAtingido: json['alvoOk'] as bool?,
+    detalhe: json['detalhe'] as String?,
   );
 }
 
@@ -114,7 +130,10 @@ class HistoryEntry {
     id: json['id'] as String? ?? '',
     quando:
         DateTime.tryParse(json['quando'] as String? ?? '') ?? DateTime.now(),
-    kind: json['kind'] == 'dividir' ? TaskKind.dividir : TaskKind.comprimir,
+    kind: TaskKind.values.firstWhere(
+      (valor) => valor.name == json['kind'],
+      orElse: () => TaskKind.comprimir,
+    ),
     resumo: json['resumo'] as String? ?? '',
     resultado: ItemResult.fromJson(
       (json['resultado'] as Map?)?.cast<String, dynamic>() ?? {},

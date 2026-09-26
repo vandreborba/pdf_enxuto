@@ -1,5 +1,5 @@
 name: pdf_enxuto
-description: "Compressor e divisor de PDF 100% local: reduza o tamanho dos seus arquivos ou corte o PDF em várias partes, sem enviar nada para a internet."
+description: "Compressor, divisor e conversor de PDF em planilha 100% local: reduza o tamanho dos arquivos, corte o PDF em várias partes ou transforme as tabelas em planilha (Excel/Calc) ou CSV, sem enviar nada para a internet."
 homepage: https://github.com/vandreborba/pdf_enxuto
 repository: https://github.com/vandreborba/pdf_enxuto
 issue_tracker: https://github.com/vandreborba/pdf_enxuto/issues
@@ -49,6 +49,10 @@ dependencies:
   # Codificação de imagens e montagem do PDF rasterizado
   image: ^4.10.1
   pdf: ^3.13.1
+
+  # Escrita do XLSX (planilha do Excel/LibreOffice Calc) na conversão de
+  # tabelas de PDF. Já vinha como dependência indireta do pdfrx.
+  archive: ^4.3.0
 
 dev_dependencies:
   flutter_test:

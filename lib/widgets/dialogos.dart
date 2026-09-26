@@ -639,6 +639,14 @@ class DialogoBoasVindas extends StatelessWidget {
                         'extraindo páginas ou usando os marcadores do PDF.',
                   ),
                   _PassoBoasVindas(
+                    icone: Icons.table_chart_outlined,
+                    titulo: 'Passe as tabelas para a planilha',
+                    texto:
+                        'Extratos, notas e relatórios viram planilha (Excel ou '
+                        'Calc) ou CSV, com as colunas no lugar — e uma prévia '
+                        'antes de converter.',
+                  ),
+                  _PassoBoasVindas(
                     icone: Icons.lock_outline_rounded,
                     titulo: 'Nada sai do seu computador',
                     texto:

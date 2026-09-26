@@ -179,6 +179,9 @@ class ItemDaFila extends StatelessWidget {
     required this.onAbrirPasta,
     required this.onAbrirArquivo,
     this.indice = 0,
+    this.rotuloAntes,
+    this.rotuloDepois,
+    this.mostrarReducao = true,
   });
 
   final ItemFila item;
@@ -186,6 +189,15 @@ class ItemDaFila extends StatelessWidget {
   final VoidCallback onAbrirPasta;
   final VoidCallback onAbrirArquivo;
   final int indice;
+
+  /// Nomes dos dois lados do comparador de tamanho. A compressão fala em
+  /// "Antes/Depois"; a conversão em planilha fala em "PDF/Planilhas".
+  final String? rotuloAntes;
+  final String? rotuloDepois;
+
+  /// A conversão em planilha não é compressão: não faz sentido anunciar
+  /// "menor" só porque o arquivo ficou menor.
+  final bool mostrarReducao;
 
   @override
   Widget build(BuildContext context) {
@@ -324,7 +336,12 @@ class ItemDaFila extends StatelessWidget {
                     ],
                   ] else if (item.resultado != null) ...[
                     const SizedBox(height: 12),
-                    ComparadorTamanho(resultado: item.resultado!),
+                    ComparadorTamanho(
+                      resultado: item.resultado!,
+                      rotuloAntes: rotuloAntes,
+                      rotuloDepois: rotuloDepois,
+                      mostrarReducao: mostrarReducao,
+                    ),
                     if (item.resultado!.aviso != null) ...[
                       const SizedBox(height: 10),
                       _Mensagem(
@@ -437,9 +454,21 @@ class _Mensagem extends StatelessWidget {
 
 /// Antes → depois, com barras proporcionais animadas.
 class ComparadorTamanho extends StatelessWidget {
-  const ComparadorTamanho({super.key, required this.resultado});
+  const ComparadorTamanho({
+    super.key,
+    required this.resultado,
+    this.rotuloAntes,
+    this.rotuloDepois,
+    this.mostrarReducao = true,
+  });
 
   final ItemResult resultado;
+  final String? rotuloAntes;
+  final String? rotuloDepois;
+
+  /// A conversão em planilha não é compressão: não faz sentido anunciar
+  /// "menor" só porque o arquivo ficou menor.
+  final bool mostrarReducao;
 
   @override
   Widget build(BuildContext context) {
@@ -450,20 +479,20 @@ class ComparadorTamanho extends StatelessWidget {
     final maior = antes > depois ? antes : depois;
     final fatorAntes = maior == 0 ? 0.0 : antes / maior;
     final fatorDepois = maior == 0 ? 0.0 : depois / maior;
-    final reduziu = depois < antes && resultado.sucesso;
+    final reduziu = mostrarReducao && depois < antes && resultado.sucesso;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _LinhaBarra(
-          rotulo: 'Antes',
+          rotulo: rotuloAntes ?? 'Antes',
           valor: Fmt.bytes(antes),
           fator: fatorAntes,
           cor: esquema.onSurfaceVariant,
         ),
         const SizedBox(height: 6),
         _LinhaBarra(
-          rotulo: 'Depois',
+          rotulo: rotuloDepois ?? 'Depois',
           valor: resultado.saidas.isEmpty ? 'sem alteração' : Fmt.bytes(depois),
           fator: resultado.saidas.isEmpty ? fatorAntes : fatorDepois,
           cor: reduziu ? cores.sucesso : cores.alerta,
@@ -499,6 +528,14 @@ class ComparadorTamanho extends StatelessWidget {
                 compacta: true,
               ),
             ],
+            if (resultado.detalhe != null) ...[
+              const SizedBox(width: 8),
+              Etiqueta(
+                texto: resultado.detalhe!,
+                icone: Icons.grid_on_rounded,
+                compacta: true,
+              ),
+            ],
           ],
         ),
       ],
@@ -524,7 +561,8 @@ class _LinhaBarra extends StatelessWidget {
     return Row(
       children: [
         SizedBox(
-          width: 52,
+          // Cabe "Planilha" (o rótulo mais longo, usado na conversão).
+          width: 66,
           child: Text(
             rotulo,
             style: TextStyle(

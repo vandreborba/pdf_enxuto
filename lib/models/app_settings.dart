@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pdf_enxuto/models/compression_options.dart';
+import 'package:pdf_enxuto/models/planilha_options.dart';
 import 'package:pdf_enxuto/models/task_models.dart';
 
 /// Todas as preferências do usuário, em um objeto imutável e serializável.
@@ -20,6 +21,7 @@ class AppSettings {
     this.pastaSaida,
     this.compressao = CompressionOptions.padrao,
     this.divisao = SplitOptions.padrao,
+    this.planilha = OpcoesPlanilha.padrao,
     this.onboardingVisto = false,
   });
 
@@ -50,6 +52,7 @@ class AppSettings {
 
   final CompressionOptions compressao;
   final SplitOptions divisao;
+  final OpcoesPlanilha planilha;
 
   final bool onboardingVisto;
 
@@ -73,6 +76,7 @@ class AppSettings {
     bool? limparPastaSaida,
     CompressionOptions? compressao,
     SplitOptions? divisao,
+    OpcoesPlanilha? planilha,
     bool? onboardingVisto,
   }) {
     return AppSettings(
@@ -96,6 +100,7 @@ class AppSettings {
           : (pastaSaida ?? this.pastaSaida),
       compressao: compressao ?? this.compressao,
       divisao: divisao ?? this.divisao,
+      planilha: planilha ?? this.planilha,
       onboardingVisto: onboardingVisto ?? this.onboardingVisto,
     );
   }
@@ -116,12 +121,14 @@ class AppSettings {
     'pastaSaida': pastaSaida,
     'compressao': compressao.toJson(),
     'divisao': divisao.toJson(),
+    'planilha': planilha.toJson(),
     'onboarding': onboardingVisto,
   };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
     final comp = (json['compressao'] as Map?)?.cast<String, dynamic>() ?? {};
     final div = (json['divisao'] as Map?)?.cast<String, dynamic>() ?? {};
+    final plan = (json['planilha'] as Map?)?.cast<String, dynamic>() ?? {};
 
     return AppSettings(
       tema: ThemeMode.values.firstWhere(
@@ -146,6 +153,9 @@ class AppSettings {
           ? CompressionOptions.padrao
           : CompressionOptions.fromJson(comp),
       divisao: div.isEmpty ? SplitOptions.padrao : SplitOptions.fromJson(div),
+      planilha: plan.isEmpty
+          ? OpcoesPlanilha.padrao
+          : OpcoesPlanilha.fromJson(plan),
       onboardingVisto: json['onboarding'] as bool? ?? false,
     );
   }

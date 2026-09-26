@@ -63,8 +63,8 @@ class PaginaHistorico extends StatelessWidget {
                 cor: context.cores.accentEscuro,
               ),
               _CartaoEstatistica(
-                titulo: 'Partes geradas',
-                valor: historico.partesGeradas,
+                titulo: 'Arquivos gerados',
+                valor: historico.arquivosGerados,
                 formatador: (valor) => '$valor',
                 icone: Icons.call_split_rounded,
                 cor: context.cores.alerta,
@@ -222,7 +222,11 @@ class _LinhaHistorico extends StatelessWidget {
     final cores = context.cores;
     final resultado = entrada.resultado;
     final nome = resultado.entrada.split(RegExp(r'[/\\]')).last;
-    final ehDivisao = entrada.kind == TaskKind.dividir;
+    final icone = switch (entrada.kind) {
+      TaskKind.comprimir => Icons.compress_rounded,
+      TaskKind.dividir => Icons.call_split_rounded,
+      TaskKind.planilha => Icons.table_chart_outlined,
+    };
 
     return FadeSlideIn(
       atraso: Duration(milliseconds: 18 * indice.clamp(0, 14)),
@@ -237,7 +241,7 @@ class _LinhaHistorico extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
-              ehDivisao ? Icons.call_split_rounded : Icons.compress_rounded,
+              icone,
               size: 20,
               color: resultado.sucesso ? cores.accent : cores.perigo,
             ),
@@ -262,7 +266,10 @@ class _LinhaHistorico extends StatelessWidget {
                   ),
                   if (resultado.sucesso && resultado.saidas.isNotEmpty) ...[
                     const SizedBox(height: 8),
-                    ComparadorTamanho(resultado: resultado),
+                    ComparadorTamanho(
+                      resultado: resultado,
+                      mostrarReducao: entrada.kind != TaskKind.planilha,
+                    ),
                   ] else if (resultado.erro != null) ...[
                     const SizedBox(height: 6),
                     Text(

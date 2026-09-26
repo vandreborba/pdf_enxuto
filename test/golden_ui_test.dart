@@ -20,6 +20,8 @@ import 'package:pdf_enxuto/models/app_settings.dart';
 import 'package:pdf_enxuto/models/compression_options.dart';
 import 'package:pdf_enxuto/models/pdf_file_info.dart';
 import 'package:pdf_enxuto/models/task_models.dart';
+import 'package:pdf_enxuto/services/servico_planilha.dart';
+import 'package:pdf_enxuto/services/tabela/detector_tabela.dart';
 import 'package:pdf_enxuto/screens/tela_principal.dart';
 import 'package:pdf_enxuto/state/app_state.dart';
 import 'package:pdf_enxuto/theme/app_theme.dart';
@@ -55,8 +57,7 @@ Future<void> _carregarFontes() async {
 
 /// Carrega os ícones do Material (no teste eles não vêm prontos).
 Future<void> _carregarIcones() async {
-  final raiz = Platform.environment['FLUTTER_ROOT'] ??
-      '/home/vandre/flutter';
+  final raiz = Platform.environment['FLUTTER_ROOT'] ?? '/home/vandre/flutter';
   final candidatos = [
     '$raiz/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
     '/home/vandre/flutter/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
@@ -165,6 +166,21 @@ void _popularHistorico(AppState estado) {
     ),
     HistoryEntry(
       id: '3',
+      quando: agora.subtract(const Duration(hours: 5)),
+      kind: TaskKind.planilha,
+      resumo: 'Planilha (XLSX) • colunas equilibrado • uma aba por tabela',
+      resultado: const ItemResult(
+        entrada: '/home/vandre/Downloads/extrato-conta.pdf',
+        saidas: ['/home/vandre/Downloads/extrato-conta.xlsx'],
+        bytesAntes: 900 * 1024,
+        bytesDepois: 96 * 1024,
+        duracao: Duration(milliseconds: 820),
+        motor: 'Nativo (embutido)',
+        detalhe: '3 abas',
+      ),
+    ),
+    HistoryEntry(
+      id: '4',
       quando: agora.subtract(const Duration(days: 2)),
       kind: TaskKind.comprimir,
       resumo: 'Forte • vira imagem • 120dpi • motor: Nativo (embutido)',
@@ -179,6 +195,36 @@ void _popularHistorico(AppState estado) {
       ),
     ),
   ]);
+}
+
+/// Prévia de planilha inventada, só para a captura ficar parecida com o uso.
+PreviaPlanilha _previaFicticia() {
+  const extrato = TabelaDetectada(
+    pagina: 1,
+    linhas: [
+      ['Data', 'Histórico', 'Documento', 'Valor'],
+      ['01/03/2026', 'PIX recebido de João & Cia', '000123', '1.234,56'],
+      ['02/03/2026', 'Pagamento de boleto', '000124', '-234,56'],
+      ['03/03/2026', 'TED enviada para Mariana', '000125', '-1.000,00'],
+      ['04/03/2026', 'Depósito em dinheiro', '000126', '500,00'],
+      ['05/03/2026', 'Tarifa de manutenção', '000127', '-24,90'],
+      ['06/03/2026', 'Rendimento da conta', '000128', '12,34'],
+    ],
+  );
+  const tarifas = TabelaDetectada(
+    pagina: 2,
+    indiceNaPagina: 1,
+    linhas: [
+      ['Tarifa', 'Valor'],
+      ['Manutenção mensal', '-24,90'],
+    ],
+  );
+  return const PreviaPlanilha(
+    paginasLidas: 2,
+    totalPaginas: 4,
+    tabelas: [extrato, tarifas],
+    soImagem: false,
+  );
 }
 
 void main() {
@@ -259,6 +305,18 @@ void main() {
     );
   });
 
+  testWidgets('captura da tela de planilha', (tester) async {
+    final estado = await prepararEstado(tester);
+    estado.definirPreviaPlanilha(_previaFicticia());
+    await capturar(
+      tester,
+      estado,
+      'tela-planilha',
+      secao: SecaoApp.planilha,
+      tamanho: const Size(1460, 1080),
+    );
+  });
+
   testWidgets('captura: tamanho alvo ligado', (tester) async {
     final estado = await prepararEstado(tester);
     await estado.atualizarCompressao(
@@ -279,9 +337,7 @@ void main() {
 
   testWidgets('captura do tema escuro', (tester) async {
     final estado = await prepararEstado(tester);
-    await estado.atualizarConfig(
-      estado.config.copyWith(tema: ThemeMode.dark),
-    );
+    await estado.atualizarConfig(estado.config.copyWith(tema: ThemeMode.dark));
     await capturar(tester, estado, 'tela-escura');
   });
 

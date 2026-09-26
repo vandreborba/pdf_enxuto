@@ -190,8 +190,8 @@ else
     cat > "$NOTES_FILE" <<EOF
 ## PDF Enxuto $TAG
 
-Compressor e divisor de PDF **100% local**: nada sai do seu computador.
-Sem conta, sem nuvem, sem anúncios.
+Compressor, divisor e conversor de PDF em planilha **100% local**: nada sai do
+seu computador. Sem conta, sem nuvem, sem anúncios.
 
 ### O que faz
 
@@ -200,6 +200,8 @@ Sem conta, sem nuvem, sem anúncios.
 - **Manter o texto selecionável** ou **virar imagem** (máxima redução).
 - **Dividir** por intervalos (\`1-3, 7, 10-12\`), a cada N páginas, por
   tamanho máximo, páginas escolhidas ou pelos marcadores do documento.
+- **Converter em planilha**: as tabelas do PDF viram planilha (XLSX, aberta
+  pelo Excel e pelo LibreOffice Calc) ou CSV, com prévia antes de converter.
 - Vários arquivos de uma vez, com progresso por arquivo, cancelar e
   histórico do quanto você já economizou.
 - Arraste PDFs para a janela ou use \`Ctrl+O\`.

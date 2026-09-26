@@ -6,6 +6,7 @@ import 'dart:async';
 /// partes e antes de gravar o arquivo. Processos externos são encerrados.
 class Cancelamento {
   bool _cancelado = false;
+  bool _descartado = false;
   final _controlador = StreamController<void>.broadcast();
 
   bool get cancelado => _cancelado;
@@ -13,7 +14,7 @@ class Cancelamento {
   Stream<void> get quandoCancelar => _controlador.stream;
 
   void cancelar() {
-    if (_cancelado) return;
+    if (_cancelado || _descartado) return;
     _cancelado = true;
     _controlador.add(null);
   }
@@ -24,6 +25,8 @@ class Cancelamento {
   }
 
   void dispose() {
+    if (_descartado) return;
+    _descartado = true;
     _controlador.close();
   }
 }

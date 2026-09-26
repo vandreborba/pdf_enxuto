@@ -10,6 +10,7 @@ import 'package:pdf_enxuto/core/sistema.dart';
 import 'package:pdf_enxuto/models/app_settings.dart';
 import 'package:pdf_enxuto/models/compression_options.dart';
 import 'package:pdf_enxuto/models/pdf_file_info.dart';
+import 'package:pdf_enxuto/models/planilha_options.dart';
 import 'package:pdf_enxuto/models/task_models.dart';
 import 'package:pdf_enxuto/services/inspecao_pdf.dart';
 import 'package:pdf_enxuto/services/motores.dart';
@@ -19,6 +20,7 @@ import 'package:pdf_enxuto/services/servico_compressao.dart';
 import 'package:pdf_enxuto/services/servico_config.dart';
 import 'package:pdf_enxuto/services/servico_divisao.dart';
 import 'package:pdf_enxuto/services/servico_historico.dart';
+import 'package:pdf_enxuto/services/servico_planilha.dart';
 
 /// Um arquivo dentro da fila de trabalho.
 class ItemFila {
@@ -59,6 +61,7 @@ class AppState extends ChangeNotifier {
   final ServicoAtualizacao atualizacoes = ServicoAtualizacao();
   late final ServicoCompressao compressao = ServicoCompressao(motores);
   late final ServicoDivisao divisao = ServicoDivisao(motores);
+  final ServicoPlanilha planilha = const ServicoPlanilha();
 
   final List<ItemFila> fila = [];
 
@@ -76,6 +79,14 @@ class AppState extends ChangeNotifier {
   int? previsaoSimulada;
   bool simulando = false;
 
+  /// Prévia da conversão para planilha (primeiro arquivo da fila).
+  PreviaPlanilha? previaPlanilha;
+  String? previaPlanilhaErro;
+  bool previaPlanilhaCarregando = false;
+  String? _previaCaminho;
+  bool _previaDesatualizada = true;
+  Cancelamento? _previaCancelamento;
+
   Timer? _avisoDeTempo;
 
   AppSettings get config => configuracao.config;
@@ -83,6 +94,8 @@ class AppState extends ChangeNotifier {
   CompressionOptions get opcoesCompressao => config.compressao;
 
   SplitOptions get opcoesDivisao => config.divisao;
+
+  OpcoesPlanilha get opcoesPlanilha => config.planilha;
 
   List<ItemFila> get itensValidos =>
       fila.where((item) => item.arquivo.ok).toList();
@@ -160,7 +173,9 @@ class AppState extends ChangeNotifier {
     }
 
     _recalcularAlvos();
+    invalidarPrevia();
     _avisar();
+    unawaited(atualizarPreviaPlanilha());
     return (
       adicionados: adicionados,
       ignorados: ignorados,
@@ -172,7 +187,9 @@ class AppState extends ChangeNotifier {
   void removerItem(String chave) {
     fila.removeWhere((item) => item.chave == chave);
     _recalcularAlvos();
+    invalidarPrevia();
     _avisar();
+    unawaited(atualizarPreviaPlanilha());
   }
 
   void limparFila() {
@@ -181,6 +198,7 @@ class AppState extends ChangeNotifier {
     }
     fila.clear();
     previsaoSimulada = null;
+    invalidarPrevia();
     _avisar();
   }
 
@@ -229,6 +247,14 @@ class AppState extends ChangeNotifier {
     _avisar();
   }
 
+  /// Guarda as opções da conversão e atualiza a prévia.
+  Future<void> atualizarPlanilha(OpcoesPlanilha opcoes) async {
+    await configuracao.atualizar(config.copyWith(planilha: opcoes));
+    invalidarPrevia();
+    _avisar();
+    unawaited(atualizarPreviaPlanilha());
+  }
+
   Future<void> atualizarConfig(AppSettings novo) async {
     await configuracao.atualizar(novo);
     _recalcularAlvos();
@@ -266,55 +292,32 @@ class AppState extends ChangeNotifier {
         if (indice >= total) return;
 
         final item = paraProcessar[indice];
-        final cancelamento = Cancelamento();
-        item.cancelamento = cancelamento;
-        item.status = JobStatus.processando;
         item.etapa = 'Preparando…';
-        _avisar();
 
         final destino = ServicoArquivos.caminhoComprimido(
           item.chave,
           config.pastaSaida,
         );
 
-        final resultado = await compressao.comprimir(
-          entrada: item.chave,
-          destino: destino,
-          opcoes: opcoesCompressao,
-          alvoBytes: item.alvoBytes,
-          cancelamento: cancelamento,
-          progresso: (fracao, etapa) {
-            item.progresso = fracao < 0 ? -1 : fracao.clamp(0, 1);
-            item.etapa = etapa;
-            _avisar();
-          },
-          sobrescrever: config.sobrescrever,
-          paginas: item.arquivo.paginas,
-        );
-
-        item.resultado = resultado;
-        item.status = resultado.sucesso
-            ? JobStatus.concluido
-            : (resultado.erro == S.erroCancelado
-                  ? JobStatus.cancelado
-                  : JobStatus.falhou);
-        item.progresso = 1;
-        item.etapa = '';
-        concluidos++;
-        etapaGeral = 'Comprimindo… $concluidos de $total';
-
         novidades.add(
-          HistoryEntry(
-            id: '${DateTime.now().microsecondsSinceEpoch}-${item.chave.hashCode}',
-            quando: DateTime.now(),
+          await _processarItem(
+            item: item,
             kind: TaskKind.comprimir,
-            resultado: resultado,
-            resumo: compressao.descrever(opcoesCompressao),
+            executar: (cancelamento, progresso) => compressao.comprimir(
+              entrada: item.chave,
+              destino: destino,
+              opcoes: opcoesCompressao,
+              alvoBytes: item.alvoBytes,
+              cancelamento: cancelamento,
+              progresso: progresso,
+              sobrescrever: config.sobrescrever,
+              paginas: item.arquivo.paginas,
+            ),
+            resumo: () => compressao.descrever(opcoesCompressao),
           ),
         );
-
-        cancelamento.dispose();
-        _avisar();
+        concluidos++;
+        etapaGeral = 'Comprimindo… $concluidos de $total';
       }
     }
 
@@ -374,11 +377,7 @@ class AppState extends ChangeNotifier {
 
     for (var i = 0; i < paraProcessar.length; i++) {
       final item = paraProcessar[i];
-      final cancelamento = Cancelamento();
-      item.cancelamento = cancelamento;
-      item.status = JobStatus.processando;
       etapaGeral = 'Dividindo ${i + 1} de ${paraProcessar.length}…';
-      _avisar();
 
       final plano = ServicoDivisao.montarPlano(
         arquivo: item.arquivo,
@@ -402,42 +401,23 @@ class AppState extends ChangeNotifier {
         continue;
       }
 
-      final resultado = await divisao.dividir(
-        arquivo: item.arquivo,
-        opcoes: opcoesDivisao,
-        plano: plano,
-        cancelamento: cancelamento,
-        progresso: (fracao, etapa) {
-          item.progresso = fracao < 0 ? -1 : fracao.clamp(0, 1);
-          item.etapa = etapa;
-          _avisar();
-        },
-        sobrescrever: config.sobrescrever,
-      );
-
-      item.resultado = resultado;
-      item.status = resultado.sucesso
-          ? JobStatus.concluido
-          : (resultado.erro == S.erroCancelado
-                ? JobStatus.cancelado
-                : JobStatus.falhou);
-      item.progresso = 1;
-      item.etapa = '';
-
       novidades.add(
-        HistoryEntry(
-          id: '${DateTime.now().microsecondsSinceEpoch}-${item.chave.hashCode}',
-          quando: DateTime.now(),
+        await _processarItem(
+          item: item,
           kind: TaskKind.dividir,
-          resultado: resultado,
-          resumo:
+          executar: (cancelamento, progresso) => divisao.dividir(
+            arquivo: item.arquivo,
+            opcoes: opcoesDivisao,
+            plano: plano,
+            cancelamento: cancelamento,
+            progresso: progresso,
+            sobrescrever: config.sobrescrever,
+          ),
+          resumo: () =>
               '${opcoesDivisao.metodo.rotulo} • '
               '${plano.partes.length} ${S.partesPrevistas}',
         ),
       );
-
-      cancelamento.dispose();
-      _avisar();
     }
 
     await historico.registrarVarias(novidades);
@@ -467,11 +447,199 @@ class AppState extends ChangeNotifier {
     _avisar();
   }
 
+  /// Roda um item da fila com o mesmo cuidado nos três tipos de tarefa:
+  /// marca "processando", limita os avisos de progresso, mapeia o status,
+  /// registra o histórico e libera o cancelamento.
+  ///
+  /// [resumo] só é lido depois que [executar] termina.
+  Future<HistoryEntry> _processarItem({
+    required ItemFila item,
+    required TaskKind kind,
+    required Future<ItemResult> Function(
+      Cancelamento cancelamento,
+      void Function(double fracao, String etapa) progresso,
+    )
+    executar,
+    required String Function() resumo,
+  }) async {
+    final cancelamento = Cancelamento();
+    item.cancelamento = cancelamento;
+    item.status = JobStatus.processando;
+    _avisar();
+
+    // O leitor avisa muitas vezes por página; notificar a cada tique faria a
+    // tela inteira reconstruir sem parar. Só avisa quando o percentual muda.
+    var ultimoMarco = -1000;
+    final resultado = await executar(cancelamento, (fracao, etapa) {
+      item.progresso = fracao < 0 ? -1 : fracao.clamp(0, 1);
+      item.etapa = etapa;
+      final marco = (item.progresso * 100).floor();
+      if (marco != ultimoMarco) {
+        ultimoMarco = marco;
+        _avisar();
+      }
+    });
+
+    item.resultado = resultado;
+    item.status = resultado.sucesso
+        ? JobStatus.concluido
+        : (resultado.erro == S.erroCancelado
+              ? JobStatus.cancelado
+              : JobStatus.falhou);
+    item.progresso = 1;
+    item.etapa = '';
+    cancelamento.dispose();
+    _avisar();
+
+    return HistoryEntry(
+      id: '${DateTime.now().microsecondsSinceEpoch}-${item.chave.hashCode}',
+      quando: DateTime.now(),
+      kind: kind,
+      resultado: resultado,
+      resumo: resumo(),
+    );
+  }
+
   void cancelarTudo() {
     for (final item in fila) {
       item.cancelamento?.cancelar();
     }
     _avisar();
+  }
+
+  // ---------------------------------------------------------------- planilha
+  /// Converte cada PDF da fila em planilha (XLSX) ou CSV.
+  Future<void> converterTudo() async {
+    if (processando || itensValidos.isEmpty) return;
+
+    processando = true;
+    etapaGeral = S.planilhaConvertendo;
+    _avisar();
+
+    final paraProcessar = itensValidos;
+    final novidades = <HistoryEntry>[];
+
+    for (final item in paraProcessar) {
+      item.status = JobStatus.aguardando;
+      item.progresso = 0;
+      item.resultado = null;
+    }
+    _avisar();
+
+    for (var i = 0; i < paraProcessar.length; i++) {
+      final item = paraProcessar[i];
+      etapaGeral =
+          'Convertendo ${i + 1} de ${paraProcessar.length}: ${item.nome}';
+
+      novidades.add(
+        await _processarItem(
+          item: item,
+          kind: TaskKind.planilha,
+          executar: (cancelamento, progresso) => planilha.converter(
+            entrada: item.chave,
+            opcoes: opcoesPlanilha,
+            cancelamento: cancelamento,
+            progresso: progresso,
+            sobrescrever: config.sobrescrever,
+            pastaSaida: config.pastaSaida,
+          ),
+          resumo: () => ServicoPlanilha.descrever(opcoesPlanilha),
+        ),
+      );
+    }
+
+    await historico.registrarVarias(novidades);
+    await atualizarPreviaPlanilha(forcar: true);
+
+    processando = false;
+    etapaGeral = '';
+
+    if (config.abrirPastaAoTerminar) {
+      for (final entrada in novidades) {
+        if (entrada.resultado.saidas.isEmpty) continue;
+        await Sistema.mostrarNaPasta(entrada.resultado.saidas.first);
+        break;
+      }
+    }
+
+    if (config.notificarAoTerminar && novidades.isNotEmpty) {
+      var gerados = 0;
+      for (final entrada in novidades) {
+        gerados += entrada.resultado.saidas.length;
+      }
+      await Sistema.notificar(
+        S.appName,
+        'Conversão concluída: $gerados arquivo(s) gerado(s).',
+      );
+    }
+
+    _avisar();
+  }
+
+  /// Prévia das tabelas do primeiro arquivo da fila.
+  ///
+  /// Roda sozinha quando a fila ou as opções mudam, para o usuário ver o
+  /// efeito de cada ajuste antes de converter — do mesmo jeito que a prévia
+  /// da divisão.
+  Future<void> atualizarPreviaPlanilha({bool forcar = false}) async {
+    if (previaPlanilhaCarregando) return;
+
+    final entrada = itensValidos.isEmpty ? null : itensValidos.first.chave;
+    if (entrada == null) {
+      if (previaPlanilha != null || previaPlanilhaErro != null) {
+        previaPlanilha = null;
+        previaPlanilhaErro = null;
+        _avisar();
+      }
+      return;
+    }
+    if (!forcar && entrada == _previaCaminho && !_previaDesatualizada) return;
+
+    _previaCaminho = entrada;
+    _previaDesatualizada = false;
+    previaPlanilhaCarregando = true;
+    _avisar();
+
+    final cancelamento = Cancelamento();
+    _previaCancelamento?.cancelar();
+    _previaCancelamento = cancelamento;
+
+    try {
+      final resultado = await planilha.previa(
+        caminho: entrada,
+        opcoes: opcoesPlanilha,
+        cancelamento: cancelamento,
+      );
+      if (cancelamento.cancelado) return;
+      previaPlanilha = resultado;
+      previaPlanilhaErro = resultado == null
+          ? 'Não foi possível abrir este PDF para ler as tabelas.'
+          : null;
+    } finally {
+      if (!cancelamento.cancelado) previaPlanilhaCarregando = false;
+      cancelamento.dispose();
+      _avisar();
+      // As opções mudaram enquanto esta prévia rodava: refaz com as novas.
+      if (_previaDesatualizada && !cancelamento.cancelado) {
+        unawaited(atualizarPreviaPlanilha());
+      }
+    }
+  }
+
+  /// Marca a prévia como desatualizada (as opções mudaram).
+  void invalidarPrevia() {
+    _previaDesatualizada = true;
+  }
+
+  /// Injeta uma prévia pronta — usado pelas capturas de tela dos testes, que
+  /// não abrem PDF de verdade.
+  @visibleForTesting
+  void definirPreviaPlanilha(PreviaPlanilha? previa) {
+    previaPlanilha = previa;
+    previaPlanilhaErro = null;
+    previaPlanilhaCarregando = false;
+    _previaDesatualizada = false;
+    notifyListeners();
   }
 
   // ----------------------------------------------------------------- simular
@@ -599,6 +767,7 @@ class AppState extends ChangeNotifier {
 
   @override
   void dispose() {
+    _previaCancelamento?.cancelar();
     _avisoDeTempo?.cancel();
     configuracao.dispose();
     historico.dispose();

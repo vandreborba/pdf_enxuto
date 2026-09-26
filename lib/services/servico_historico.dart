@@ -62,9 +62,12 @@ class ServicoHistorico extends ChangeNotifier {
   }
 
   // ------------------------------------------------------------- estatísticas
+  /// Só a compressão economiza espaço: dividir mantém o tamanho e converter
+  /// em planilha costuma gerar um arquivo maior que o PDF.
   int get totalEconomizado {
     var total = 0;
     for (final entrada in _entradas) {
+      if (entrada.kind != TaskKind.comprimir) continue;
       final diferenca =
           entrada.resultado.bytesAntes - entrada.resultado.bytesDepois;
       if (diferenca > 0 && entrada.resultado.sucesso) total += diferenca;
@@ -77,6 +80,7 @@ class ServicoHistorico extends ChangeNotifier {
   int get totalBytesEntrada {
     var total = 0;
     for (final entrada in _entradas) {
+      if (entrada.kind == TaskKind.planilha) continue;
       total += entrada.resultado.bytesAntes;
     }
     return total;
@@ -88,11 +92,15 @@ class ServicoHistorico extends ChangeNotifier {
     return totalEconomizado / total;
   }
 
-  int get partesGeradas {
+  /// Arquivos que o app criou a partir de um PDF: partes da divisão e
+  /// planilhas da conversão.
+  int get arquivosGerados {
     var total = 0;
     for (final entrada in _entradas) {
-      if (entrada.kind == TaskKind.dividir)
+      if (entrada.kind == TaskKind.dividir ||
+          entrada.kind == TaskKind.planilha) {
         total += entrada.resultado.saidas.length;
+      }
     }
     return total;
   }
