@@ -1020,13 +1020,16 @@ class _DialogoRelatoState extends State<DialogoRelato> {
     final abriu = await abrirEmail(assunto: _assunto, corpo: _corpo());
     if (!mounted) return;
 
-    Navigator.of(context).pop();
+    // Avisa antes de fechar: o SnackBar pertence ao ScaffoldMessenger, que
+    // fica acima do Navigator, então segue visível depois do pop. Mostrar
+    // depois do pop usaria um contexto já desativado e o aviso sumia.
     mostrarAviso(
       context,
       abriu ? S.relatarObrigado : S.relatarSemCliente,
       icone: abriu ? Icons.mark_email_read_outlined : Icons.copy_rounded,
       duracao: const Duration(seconds: 6),
     );
+    Navigator.of(context).pop();
   }
 }
 
