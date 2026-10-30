@@ -20,6 +20,8 @@ import 'package:pdf_enxuto/models/app_settings.dart';
 import 'package:pdf_enxuto/models/compression_options.dart';
 import 'package:pdf_enxuto/models/pdf_file_info.dart';
 import 'package:pdf_enxuto/models/task_models.dart';
+import 'package:pdf_enxuto/services/ocr/motor_tesseract.dart';
+import 'package:pdf_enxuto/services/servico_ocr.dart';
 import 'package:pdf_enxuto/services/servico_planilha.dart';
 import 'package:pdf_enxuto/services/tabela/detector_tabela.dart';
 import 'package:pdf_enxuto/screens/tela_principal.dart';
@@ -314,6 +316,47 @@ void main() {
       'tela-planilha',
       secao: SecaoApp.planilha,
       tamanho: const Size(1460, 1080),
+    );
+  });
+
+  testWidgets('captura da tela de OCR', (tester) async {
+    final estado = await prepararEstado(tester);
+    // A fila do OCR começa limpa: os resultados do fixture são de compressão.
+    for (final item in estado.fila) {
+      item.status = JobStatus.aguardando;
+      item.resultado = null;
+    }
+    // O Tesseract é injetado: a captura não depende de ele estar instalado.
+    estado.ocr.motor.definirEstado(
+      const EstadoOcr(
+        disponivel: true,
+        versao: '5.5.0',
+        embutido: true,
+        idiomas: ['por', 'eng', 'spa', 'fra', 'deu', 'ita'],
+      ),
+    );
+    estado.definirTesteOcr(
+      const PreviaOcr(
+        pagina: 1,
+        totalPaginas: 12,
+        palavras: 38,
+        confianca: 93.4,
+        jaTinhaTexto: false,
+        texto:
+            'CONTRATO DE PRESTAÇÃO DE SERVIÇOS\n\n'
+            'Pelo presente instrumento particular, as partes abaixo '
+            'qualificadas resolvem firmar o presente contrato, mediante as '
+            'cláusulas e condições a seguir.\n\n'
+            'Cláusula 1ª – O valor total dos serviços é de R\$ 1.250,00, com '
+            'vencimento em 05/11.',
+      ),
+    );
+    await capturar(
+      tester,
+      estado,
+      'tela-ocr',
+      secao: SecaoApp.ocr,
+      tamanho: const Size(1460, 1720),
     );
   });
 

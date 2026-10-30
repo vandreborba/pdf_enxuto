@@ -40,6 +40,32 @@ jobs:
       - name: Build Windows (Release)
         run: flutter build windows --release
 
+      # Tesseract (OCR) embutido: o app procura a pasta "ocr" ao lado do .exe.
+      # O pacote do Chocolatey instala o Tesseract com as DLLs e o inglês;
+      # os demais idiomas vêm do tessdata_fast (os menores).
+      - name: Embed Tesseract (OCR)
+        shell: pwsh
+        run: |
+          choco install tesseract --no-progress -y
+          $src = "C:\Program Files\Tesseract-OCR"
+          if (-not (Test-Path "$src\tesseract.exe")) {
+            Write-Error "Tesseract not found in $src"
+            exit 1
+          }
+          $dest = "build\windows\x64\runner\Release\ocr"
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Copy-Item "$src\*.exe" $dest
+          Copy-Item "$src\*.dll" $dest
+          New-Item -ItemType Directory -Force -Path "$dest\tessdata" | Out-Null
+          Copy-Item "$src\tessdata\configs" "$dest\tessdata" -Recurse
+          if (Test-Path "$src\tessdata\tessconfigs") {
+            Copy-Item "$src\tessdata\tessconfigs" "$dest\tessdata" -Recurse
+          }
+          foreach ($lang in "por","eng","spa","fra","deu","ita") {
+            Invoke-WebRequest "https://github.com/tesseract-ocr/tessdata_fast/raw/main/$lang.traineddata" -OutFile "$dest\tessdata\$lang.traineddata"
+          }
+          & "$dest\tesseract.exe" --tessdata-dir "$dest\tessdata" --list-langs
+
       - name: Create ZIP package
         id: package
         shell: pwsh

@@ -23,7 +23,7 @@ NC='\033[0m'
 APP_NAME="pdf-enxuto"
 APP_DISPLAY_NAME="PDF Enxuto"
 APP_VERSION="$(get_app_version)"
-APP_COMMENT="Compressor e divisor de PDF 100% local"
+APP_COMMENT="Compressor, divisor e OCR de PDF 100% local"
 
 BUILD_DIR="$SCRIPT_DIR/build"
 BUNDLE_DIR="$BUILD_DIR/linux/x64/release/bundle"
@@ -86,6 +86,10 @@ echo -e "${YELLOW}📦 Montando AppDir...${NC}"
 mkdir -p "$APPDIR/usr/bin"
 cp -r "$BUNDLE_DIR"/* "$APPDIR/usr/bin/"
 
+echo -e "${YELLOW}  → Embutindo o Tesseract (OCR)...${NC}"
+bash "$SCRIPT_DIR/.sh/preparar-ocr.sh"
+cp -r "$BUILD_DIR/ocr" "$APPDIR/usr/bin/ocr"
+
 echo -e "${YELLOW}  → Criando AppRun...${NC}"
 cat > "$APPDIR/AppRun" <<EOF
 #!/bin/bash
@@ -112,7 +116,7 @@ Icon=$APP_NAME
 Terminal=false
 Categories=Utility;Office;Compression;
 MimeType=application/pdf;
-Keywords=pdf;comprimir;compactar;reduzir;dividir;separar;split;compress;
+Keywords=pdf;comprimir;compactar;reduzir;dividir;separar;split;compress;ocr;planilha;
 EOF
 
 ensure_appimagetool

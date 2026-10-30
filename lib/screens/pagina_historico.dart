@@ -226,6 +226,7 @@ class _LinhaHistorico extends StatelessWidget {
       TaskKind.comprimir => Icons.compress_rounded,
       TaskKind.dividir => Icons.call_split_rounded,
       TaskKind.planilha => Icons.table_chart_outlined,
+      TaskKind.ocr => Icons.document_scanner_outlined,
     };
 
     return FadeSlideIn(
@@ -268,7 +269,9 @@ class _LinhaHistorico extends StatelessWidget {
                     const SizedBox(height: 8),
                     ComparadorTamanho(
                       resultado: resultado,
-                      mostrarReducao: entrada.kind != TaskKind.planilha,
+                      mostrarReducao:
+                          entrada.kind != TaskKind.planilha &&
+                          entrada.kind != TaskKind.ocr,
                     ),
                   ] else if (resultado.erro != null) ...[
                     const SizedBox(height: 6),

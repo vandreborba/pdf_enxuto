@@ -37,6 +37,7 @@ class S {
   // ----------------------------------------------------------- Navegação
   static const navComprimir = 'Comprimir';
   static const navDividir = 'Dividir';
+  static const navOcr = 'Reconhecer texto';
   static const navHistorico = 'Histórico';
   static const navConfiguracoes = 'Configurações';
   static const navSobre = 'Sobre';
@@ -252,7 +253,7 @@ class S {
       'Não foi possível ler as páginas deste PDF.';
   static const planilhaDigitalizada =
       'Este PDF é uma imagem (digitalização): não tem texto para converter. '
-      'Seria preciso um programa de OCR antes — o PDF Enxuto não faz OCR.';
+      'Passe o PDF pela aba "Reconhecer texto" antes e converta o resultado.';
   static const planilhaSemTabela =
       'Não sobrou nenhum conteúdo para gravar. O PDF pode estar em branco.';
   static const planilhaFalhou = 'Não foi possível converter';
@@ -265,6 +266,60 @@ class S {
   static const planilhaAvisoXlsx =
       'O XLSX abre no Excel e no LibreOffice Calc. O CSV abre em praticamente '
       'qualquer programa, mas é texto puro.';
+
+  // ------------------------------------------------------------------- OCR
+  static const ocrTitulo = 'Reconhecer texto (OCR)';
+  static const ocrSubtitulo =
+      'Transforme PDFs digitalizados em PDFs pesquisáveis, com texto que dá '
+      'para selecionar e copiar.';
+  static const ocrAgora = 'Reconhecer agora';
+  static const ocrReconhecendo = 'Reconhecendo o texto…';
+  static const ocrArquivos = 'Arquivos';
+  static const ocrIdiomas = 'Idioma do documento';
+  static const ocrSaida = 'O que gerar';
+  static const ocrQualidade = 'Qualidade da leitura';
+  static const ocrTipoPagina = 'Tipo de página';
+  static const ocrImagem = 'Imagem dentro do PDF';
+  static const ocrPaginas = 'Quais páginas';
+  static const ocrPaginasDica = 'Todas (ou, por exemplo: 1-3, 7)';
+  static const ocrOpcoes = 'Detalhes';
+  static const ocrRefazer = 'Reconhecer mesmo se o PDF já tiver texto';
+  static const ocrTeste = 'Teste na primeira página';
+  static const ocrTesteVazio = 'Adicione um PDF para testar o reconhecimento';
+  static const ocrTesteDica =
+      'Veja o que o app lê antes de processar o arquivo todo. O teste usa as '
+      'mesmas opções da conversão.';
+  static const ocrTestar = 'Testar';
+  static const ocrTestando = 'Lendo a página…';
+  static const ocrTesteNada =
+      'Nenhum texto foi reconhecido nesta página. Confira o idioma, tente '
+      'a qualidade "Preciso" ou outro tipo de página.';
+  static const ocrTesteJaTinha =
+      'Esta página já tem texto de verdade — talvez não precise de OCR.';
+  static const ocrMotor = 'Motor de reconhecimento';
+  static const ocrMotorIndisponivel =
+      'O motor de reconhecimento (Tesseract) não foi encontrado neste '
+      'computador.';
+  static const ocrIdiomaIndisponivel =
+      'Idioma não instalado neste computador';
+  static const ocrOndeSalvar = 'Onde salvar';
+  static const ocrSemMotor =
+      'O motor de reconhecimento (Tesseract) não está disponível. Veja como '
+      'instalar na tela de reconhecimento.';
+  static const ocrSemSaida = 'Escolha pelo menos uma saída: PDF ou texto.';
+  static const ocrPaginasInvalidas =
+      'As páginas escolhidas não são válidas para este PDF.';
+  static const ocrJaTemTexto =
+      'Este PDF já tem texto selecionável, então não há o que reconhecer. Se '
+      'quiser refazer mesmo assim, ligue a opção de reconhecer PDFs que já '
+      'têm texto.';
+  static const ocrSemTexto =
+      'Não foi possível reconhecer nenhum texto. Confira o idioma e tente a '
+      'qualidade "Preciso".';
+  static const ocrFalhou = 'Não foi possível reconhecer o texto';
+  static const ocrConfiancaBaixa =
+      'A confiança do reconhecimento ficou baixa: confira o resultado. Uma '
+      'qualidade maior ou o idioma certo costumam ajudar.';
 
   // ------------------------------------------------------- Configurações
   static const configTitulo = 'Configurações';
@@ -590,6 +645,53 @@ class Ajuda {
       'usá-los quando isso trouxer vantagem — é só instalar e clicar em '
       '"Procurar novamente".';
 
+  // ------------------------------------------------------------------- OCR
+  static const ocrIdiomas =
+      'O reconhecimento lê melhor quando sabe em que língua o texto foi '
+      'escrito: ele usa o dicionário do idioma para decidir entre letras '
+      'parecidas (como "rn" e "m").\n\n'
+      'Marque todos os idiomas que aparecem no documento. Dois ou três não '
+      'atrapalham; marcar idiomas demais deixa a leitura mais lenta e pode '
+      'confundir.';
+  static const ocrSaida =
+      '• PDF pesquisável: fica igual ao original, com uma camada de texto '
+      'invisível por cima. Você pode buscar palavras, selecionar e copiar.\n'
+      '• Texto (.txt): só o texto reconhecido, para colar em outro lugar.\n\n'
+      'Dá para marcar os dois.';
+  static const ocrQualidade =
+      'É a resolução em que cada página é desenhada antes de ser lida.\n\n'
+      '• Rápido (150 dpi): texto grande e limpo.\n'
+      '• Equilibrado (200 dpi): serve para a maioria dos documentos.\n'
+      '• Preciso (300 dpi): letra miúda, fax, cópia desbotada. Mais lento.';
+  static const ocrTipoPagina =
+      'Ajuda o app a entender como a página está organizada.\n\n'
+      '• Automático: descobre colunas, títulos e parágrafos sozinho. Comece '
+      'por ele.\n'
+      '• Uma coluna: cartas, laudos, contratos.\n'
+      '• Bloco único: a página inteira é um bloco de texto uniforme.\n'
+      '• Texto solto: formulários, recibos e tabelas, onde o texto está '
+      'espalhado.';
+  static const ocrImagem =
+      'No PDF pesquisável, cada página é uma imagem com o texto invisível por '
+      'cima. Estas opções controlam essa imagem, não a leitura.\n\n'
+      '• Qualidade: Leve deixa o arquivo menor; Alta preserva mais detalhes.\n'
+      '• Cor: tons de cinza e preto e branco reduzem bastante o tamanho de '
+      'documentos de texto.';
+  static const ocrPaginas =
+      'Deixe vazio para ler todas as páginas. Para ler só algumas, escreva '
+      'como "1-3, 7, 10-12".\n\n'
+      'O PDF novo terá apenas as páginas escolhidas.';
+  static const ocrRefazer =
+      'Se o PDF já tem texto selecionável, normalmente não há o que '
+      'reconhecer, e o app avisa. Ligue esta opção para refazer mesmo assim — '
+      'por exemplo, quando o texto embutido está errado.\n\n'
+      'Atenção: no PDF novo essas páginas viram imagem com o texto novo por '
+      'cima.';
+  static const ocrMotor =
+      'O reconhecimento é feito pelo Tesseract, um programa de código aberto. '
+      'Ele vem junto com o PDF Enxuto e roda no seu computador: nenhum '
+      'arquivo é enviado para a internet.';
+
   // ------------------------------------------------------------- Planilha
   static const planilhaModo =
       'Um PDF não guarda tabelas: guarda pedaços de texto, cada um com uma '
@@ -683,11 +785,11 @@ class Ajuda {
 
   static const planilhaDigitalizada =
       'Para virar planilha, o PDF precisa ter texto de verdade. Uma '
-      'digitalização (foto ou scanner) é só uma imagem: para ler seria preciso '
-      'OCR, e o PDF Enxuto não faz OCR — ele lê o texto que já existe no '
-      'arquivo, sem chutar.\n\n'
+      'digitalização (foto ou scanner) é só uma imagem: para ler é preciso '
+      'OCR. A conversão em planilha lê o texto que já existe no arquivo, sem '
+      'chutar.\n\n'
       'Como saber: abra o PDF e tente selecionar uma palavra com o mouse. Se '
       'não conseguir selecionar nada, é digitalização.\n\n'
-      'O caminho, nesse caso, é passar o PDF por um programa de OCR antes de '
-      'converter.';
+      'O caminho, nesse caso, é passar o PDF pela aba "Reconhecer texto" '
+      'antes: ela gera um PDF pesquisável, que daí pode ser convertido.';
 }

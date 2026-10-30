@@ -9,6 +9,9 @@ class ServicoArquivos {
   /// Sufixo usado nas compressões: "relatorio.pdf" → "relatorio_enxuto.pdf".
   static const String sufixoComprimido = '_enxuto';
 
+  /// Sufixo do PDF pesquisável: "scan.pdf" → "scan_ocr.pdf".
+  static const String sufixoOcr = '_ocr';
+
   /// Separa pasta, nome-base (sem extensão) e extensão (com o ponto) de um
   /// caminho. Ponto de verdade: os três usos de nome de arquivo passam aqui.
   static (String pasta, String base, String extensao) _dividirCaminho(

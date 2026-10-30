@@ -647,6 +647,14 @@ class DialogoBoasVindas extends StatelessWidget {
                         'antes de converter.',
                   ),
                   _PassoBoasVindas(
+                    icone: Icons.document_scanner_outlined,
+                    titulo: 'Dê texto às digitalizações',
+                    texto:
+                        'O reconhecimento de texto (OCR) transforma PDFs '
+                        'escaneados em PDFs pesquisáveis, onde dá para buscar '
+                        'e copiar — ou em texto puro.',
+                  ),
+                  _PassoBoasVindas(
                     icone: Icons.lock_outline_rounded,
                     titulo: 'Nada sai do seu computador',
                     texto:

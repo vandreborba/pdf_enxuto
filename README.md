@@ -1,6 +1,6 @@
 # PDF Enxuto
 
-Compressor, divisor e **conversor de PDF em planilha** — tudo **100% local**, para Linux e
+Compressor, divisor, **conversor de PDF em planilha** e **OCR** — tudo **100% local**, para Linux e
 Windows. Sem conta, sem nuvem, sem anúncios — seus arquivos nunca saem do seu computador.
 
 [![Flutter](https://img.shields.io/badge/Flutter-Linux%20%7C%20Windows-blue)](https://github.com/vandreborba/pdf_enxuto)
@@ -10,6 +10,8 @@ Windows. Sem conta, sem nuvem, sem anúncios — seus arquivos nunca saem do seu
 ![Tela de compressão](assets/screenshot/tela-comprimir.png)
 
 ![Tela de conversão em planilha](assets/screenshot/tela-planilha.png)
+
+![Tela de reconhecimento de texto (OCR)](assets/screenshot/tela-ocr.png)
 
 ## O que faz
 
@@ -23,8 +25,14 @@ Windows. Sem conta, sem nuvem, sem anúncios — seus arquivos nunca saem do seu
   Excel e no LibreOffice Calc) ou CSV** — extratos, notas fiscais, relatórios e listagens
   viram linhas e colunas de verdade, com números e datas somáveis. Tem **prévia** das
   tabelas encontradas, controle de separação das colunas e opção de ignorar cabeçalho e
-  rodapé repetidos. PDFs que são só imagem (digitalização) são avisados com clareza: para
-  esses seria preciso OCR, que o app não faz.
+  rodapé repetidos. PDFs que são só imagem (digitalização) são avisados com clareza: passe-os
+  antes pelo **Reconhecer texto**.
+- **Reconhecer texto (OCR)**: transforma PDFs digitalizados em **PDF pesquisável** (igual ao
+  original, com texto para buscar, selecionar e copiar) e/ou em **texto (.txt)**. Escolha os
+  idiomas (português, inglês, espanhol, francês, alemão, italiano), a qualidade da leitura
+  (150, 200 ou 300 dpi), o tipo de página, quais páginas ler e o peso da imagem do PDF novo.
+  Um **teste na primeira página** mostra o texto e a confiança antes de processar tudo. Usa o
+  Tesseract, que já vem dentro do app.
 - Vários arquivos de uma vez, com progresso por arquivo, cancelar e histórico do quanto
   você já economizou.
 - Ajuda **"?"** em cada opção, em português claro.
@@ -39,6 +47,11 @@ disponível — e mostra na interface como instalá-los:
 ```bash
 sudo apt install ghostscript qpdf
 ```
+
+O reconhecimento de texto usa o **Tesseract**, que também vem embutido nos pacotes (AppImage,
+.deb e ZIP do Windows), na pasta `ocr` ao lado do executável. Rodando a partir do código, o app
+usa o Tesseract instalado no sistema (`sudo apt install tesseract-ocr tesseract-ocr-por`). Para
+gerar o pacote com ele embutido: `bash .sh/preparar-ocr.sh` (os scripts de build já chamam).
 
 ## Instalação
 

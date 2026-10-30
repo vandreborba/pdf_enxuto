@@ -9,6 +9,7 @@ import 'package:pdf_enxuto/core/cancelamento.dart';
 import 'package:pdf_enxuto/core/sistema.dart';
 import 'package:pdf_enxuto/models/app_settings.dart';
 import 'package:pdf_enxuto/models/compression_options.dart';
+import 'package:pdf_enxuto/models/ocr_options.dart';
 import 'package:pdf_enxuto/models/pdf_file_info.dart';
 import 'package:pdf_enxuto/models/planilha_options.dart';
 import 'package:pdf_enxuto/models/task_models.dart';
@@ -20,6 +21,7 @@ import 'package:pdf_enxuto/services/servico_compressao.dart';
 import 'package:pdf_enxuto/services/servico_config.dart';
 import 'package:pdf_enxuto/services/servico_divisao.dart';
 import 'package:pdf_enxuto/services/servico_historico.dart';
+import 'package:pdf_enxuto/services/servico_ocr.dart';
 import 'package:pdf_enxuto/services/servico_planilha.dart';
 
 /// Um arquivo dentro da fila de trabalho.
@@ -62,6 +64,7 @@ class AppState extends ChangeNotifier {
   late final ServicoCompressao compressao = ServicoCompressao(motores);
   late final ServicoDivisao divisao = ServicoDivisao(motores);
   final ServicoPlanilha planilha = const ServicoPlanilha();
+  final ServicoOcr ocr = ServicoOcr();
 
   final List<ItemFila> fila = [];
 
@@ -87,6 +90,12 @@ class AppState extends ChangeNotifier {
   bool _previaDesatualizada = true;
   Cancelamento? _previaCancelamento;
 
+  /// Teste do reconhecimento na primeira página (só quando o usuário pede).
+  PreviaOcr? previaOcr;
+  String? previaOcrErro;
+  bool previaOcrCarregando = false;
+  Cancelamento? _testeOcrCancelamento;
+
   Timer? _avisoDeTempo;
 
   AppSettings get config => configuracao.config;
@@ -96,6 +105,8 @@ class AppState extends ChangeNotifier {
   SplitOptions get opcoesDivisao => config.divisao;
 
   OpcoesPlanilha get opcoesPlanilha => config.planilha;
+
+  OpcoesOcr get opcoesOcr => config.ocr;
 
   List<ItemFila> get itensValidos =>
       fila.where((item) => item.arquivo.ok).toList();
@@ -114,7 +125,7 @@ class AppState extends ChangeNotifier {
     // Se o app foi fechado no meio de uma tarefa, sobrou pasta temporária.
     unawaited(Sistema.limparTemporariosAntigos());
     await Future.wait([configuracao.carregar(), historico.carregar()]);
-    await motores.detectar();
+    await Future.wait([motores.detectar(), ocr.motor.detectar()]);
     carregando = false;
     notifyListeners();
 
@@ -174,6 +185,7 @@ class AppState extends ChangeNotifier {
 
     _recalcularAlvos();
     invalidarPrevia();
+    _descartarTesteOcr();
     _avisar();
     unawaited(atualizarPreviaPlanilha());
     return (
@@ -188,6 +200,7 @@ class AppState extends ChangeNotifier {
     fila.removeWhere((item) => item.chave == chave);
     _recalcularAlvos();
     invalidarPrevia();
+    _descartarTesteOcr();
     _avisar();
     unawaited(atualizarPreviaPlanilha());
   }
@@ -198,6 +211,7 @@ class AppState extends ChangeNotifier {
     }
     fila.clear();
     previsaoSimulada = null;
+    _descartarTesteOcr();
     invalidarPrevia();
     _avisar();
   }
@@ -253,6 +267,14 @@ class AppState extends ChangeNotifier {
     invalidarPrevia();
     _avisar();
     unawaited(atualizarPreviaPlanilha());
+  }
+
+  /// Guarda as opções do reconhecimento de texto. O teste feito antes deixa
+  /// de valer, porque ele dependia das opções antigas.
+  Future<void> atualizarOcr(OpcoesOcr opcoes) async {
+    await configuracao.atualizar(config.copyWith(ocr: opcoes));
+    _descartarTesteOcr();
+    _avisar();
   }
 
   Future<void> atualizarConfig(AppSettings novo) async {
@@ -576,6 +598,128 @@ class AppState extends ChangeNotifier {
     _avisar();
   }
 
+  // --------------------------------------------------------------------- ocr
+  /// Reconhece o texto de cada PDF da fila e grava o PDF pesquisável e/ou
+  /// o texto.
+  Future<void> reconhecerTudo() async {
+    if (processando || itensValidos.isEmpty) return;
+
+    processando = true;
+    etapaGeral = S.ocrReconhecendo;
+    _avisar();
+
+    final paraProcessar = itensValidos;
+    final novidades = <HistoryEntry>[];
+
+    for (final item in paraProcessar) {
+      item.status = JobStatus.aguardando;
+      item.progresso = 0;
+      item.resultado = null;
+    }
+    _avisar();
+
+    for (var i = 0; i < paraProcessar.length; i++) {
+      final item = paraProcessar[i];
+      etapaGeral =
+          'Reconhecendo ${i + 1} de ${paraProcessar.length}: ${item.nome}';
+
+      novidades.add(
+        await _processarItem(
+          item: item,
+          kind: TaskKind.ocr,
+          executar: (cancelamento, progresso) => ocr.reconhecer(
+            entrada: item.chave,
+            opcoes: opcoesOcr,
+            cancelamento: cancelamento,
+            progresso: progresso,
+            sobrescrever: config.sobrescrever,
+            pastaSaida: config.pastaSaida,
+          ),
+          resumo: () => ServicoOcr.descrever(opcoesOcr),
+        ),
+      );
+    }
+
+    await historico.registrarVarias(novidades);
+
+    processando = false;
+    etapaGeral = '';
+
+    if (config.abrirPastaAoTerminar) {
+      for (final entrada in novidades) {
+        if (entrada.resultado.saidas.isEmpty) continue;
+        await Sistema.mostrarNaPasta(entrada.resultado.saidas.first);
+        break;
+      }
+    }
+
+    if (config.notificarAoTerminar && novidades.isNotEmpty) {
+      var gerados = 0;
+      for (final entrada in novidades) {
+        gerados += entrada.resultado.saidas.length;
+      }
+      await Sistema.notificar(
+        S.appName,
+        'Reconhecimento concluído: $gerados arquivo(s) gerado(s).',
+      );
+    }
+
+    _avisar();
+  }
+
+  /// Lê só a primeira página do primeiro arquivo, para o usuário ver o
+  /// efeito das opções antes de processar tudo.
+  Future<void> testarOcr() async {
+    if (previaOcrCarregando || itensValidos.isEmpty) return;
+    final entrada = itensValidos.first.chave;
+
+    _descartarTesteOcr();
+    previaOcrCarregando = true;
+    _avisar();
+
+    final cancelamento = Cancelamento();
+    _testeOcrCancelamento = cancelamento;
+    try {
+      final resultado = await ocr.previa(
+        caminho: entrada,
+        opcoes: opcoesOcr,
+        cancelamento: cancelamento,
+      );
+      if (cancelamento.cancelado) return;
+      previaOcr = resultado;
+    } on OperacaoCancelada {
+      return;
+    } catch (erro) {
+      if (cancelamento.cancelado) return;
+      previaOcrErro = erro is FormatException
+          ? erro.message
+          : 'Não foi possível testar o reconhecimento: $erro';
+    } finally {
+      if (identical(_testeOcrCancelamento, cancelamento)) {
+        previaOcrCarregando = false;
+        _testeOcrCancelamento = null;
+      }
+      cancelamento.dispose();
+      _avisar();
+    }
+  }
+
+  /// Injeta um teste pronto — usado pelas capturas de tela dos testes.
+  @visibleForTesting
+  void definirTesteOcr(PreviaOcr? previa) {
+    previaOcr = previa;
+    previaOcrErro = null;
+    previaOcrCarregando = false;
+  }
+
+  void _descartarTesteOcr() {
+    _testeOcrCancelamento?.cancelar();
+    _testeOcrCancelamento = null;
+    previaOcr = null;
+    previaOcrErro = null;
+    previaOcrCarregando = false;
+  }
+
   /// Prévia das tabelas do primeiro arquivo da fila.
   ///
   /// Roda sozinha quando a fila ou as opções mudam, para o usuário ver o
@@ -761,13 +905,17 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> procurarMotoresNovamente() async {
-    await motores.detectar(forcar: true);
+    await Future.wait([
+      motores.detectar(forcar: true),
+      ocr.motor.detectar(forcar: true),
+    ]);
     _avisar();
   }
 
   @override
   void dispose() {
     _previaCancelamento?.cancelar();
+    _testeOcrCancelamento?.cancelar();
     _avisoDeTempo?.cancel();
     configuracao.dispose();
     historico.dispose();

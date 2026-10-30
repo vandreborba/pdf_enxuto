@@ -68,6 +68,10 @@ mkdir -p "$DEB_PKG_DIR/usr/local/bin"
 echo -e "${YELLOW}  → Copiando arquivos do aplicativo...${NC}"
 cp -r "$BUILD_DIR/linux/x64/release/bundle"/* "$DEB_PKG_DIR/opt/$APP_NAME/"
 
+echo -e "${YELLOW}  → Embutindo o Tesseract (OCR)...${NC}"
+bash "$SCRIPT_DIR/.sh/preparar-ocr.sh"
+cp -r "$BUILD_DIR/ocr" "$DEB_PKG_DIR/opt/$APP_NAME/ocr"
+
 echo -e "${YELLOW}  → Criando arquivo de controle...${NC}"
 cat > "$DEB_PKG_DIR/DEBIAN/control" <<EOF
 Package: $APP_NAME

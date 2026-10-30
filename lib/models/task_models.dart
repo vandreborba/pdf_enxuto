@@ -7,18 +7,21 @@ import 'package:pdf_enxuto/models/page_range.dart';
 enum TaskKind {
   comprimir,
   dividir,
-  planilha;
+  planilha,
+  ocr;
 
   String get rotulo => switch (this) {
     TaskKind.comprimir => 'Compressão',
     TaskKind.dividir => 'Divisão',
     TaskKind.planilha => 'Conversão',
+    TaskKind.ocr => 'Reconhecimento',
   };
 
   String get particulo => switch (this) {
     TaskKind.comprimir => 'comprimido',
     TaskKind.dividir => 'dividido',
     TaskKind.planilha => 'convertido',
+    TaskKind.ocr => 'reconhecido',
   };
 }
 

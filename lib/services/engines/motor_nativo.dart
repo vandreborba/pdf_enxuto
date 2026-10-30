@@ -1,19 +1,16 @@
 import 'dart:io';
 import 'dart:isolate';
-import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:image/image.dart' as img;
 import 'package:pdfrx/pdfrx.dart';
 
 import 'package:pdf_enxuto/core/cancelamento.dart';
 import 'package:pdf_enxuto/models/compression_options.dart';
 import 'package:pdf_enxuto/models/page_range.dart';
 import 'package:pdf_enxuto/services/engines/motor_pdf.dart';
-import 'package:pdf_enxuto/services/pdf/pdf_objects.dart';
+import 'package:pdf_enxuto/services/pdf/paginas_imagem.dart';
 import 'package:pdf_enxuto/services/pdf/pdf_operations.dart';
 import 'package:pdf_enxuto/services/pdf/pdf_reader.dart';
-import 'package:pdf_enxuto/services/pdf/pdf_writer.dart';
 
 /// Motor nativo: roda dentro do app, sem instalar nada.
 ///
@@ -186,8 +183,8 @@ class MotorNativo extends MotorPdf {
       }
 
       final escala = opcoes.dpi / 72.0;
-      final imagens = <_ImagemPagina>[];
-      final tamanhos = <_TamanhoPagina>[];
+      final imagens = <ImagemPagina>[];
+      final tamanhos = <TamanhoPagina>[];
 
       for (var i = 0; i < total; i++) {
         cancelamento.verificar();
@@ -217,7 +214,7 @@ class MotorNativo extends MotorPdf {
         final modo = opcoes.colorMode;
         final qualidade = opcoes.jpegQuality;
         final codificada = await Isolate.run(
-          () => _codificarPagina(
+          () => codificarPagina(
             pixels,
             larguraReal,
             alturaReal,
@@ -228,7 +225,7 @@ class MotorNativo extends MotorPdf {
 
         imagens.add(codificada);
         tamanhos.add(
-          _TamanhoPagina(largura: pagina.width, altura: pagina.height),
+          TamanhoPagina(largura: pagina.width, altura: pagina.height),
         );
       }
 
@@ -239,7 +236,7 @@ class MotorNativo extends MotorPdf {
       cancelamento.verificar();
       progresso(0.8, 'Montando o PDF…');
 
-      final bytes = await Isolate.run(() => _montarPdf(imagens, tamanhos));
+      final bytes = await Isolate.run(() => montarPdfDePaginas(imagens, tamanhos));
       await _gravar(saida, bytes);
       progresso(1, 'Concluído');
 
@@ -370,212 +367,3 @@ _ResultadoReescrita _reescreverEmIsolate(
     fluxosRecomprimidos: resultado.fluxosRecomprimidos,
   );
 }
-
-/// Uma página já convertida em imagem pronta para entrar no PDF.
-class _ImagemPagina {
-  const _ImagemPagina({
-    required this.dados,
-    required this.largura,
-    required this.altura,
-    required this.filtro,
-    required this.espacoCor,
-    required this.bits,
-  });
-
-  final Uint8List dados;
-  final int largura;
-  final int altura;
-
-  /// /DCTDecode (JPEG) ou /FlateDecode (1 bit por pixel).
-  final String filtro;
-  final String espacoCor;
-  final int bits;
-}
-
-class _TamanhoPagina {
-  const _TamanhoPagina({required this.largura, required this.altura});
-
-  final double largura;
-  final double altura;
-}
-
-/// Converte BGRA (pdfium) em JPEG ou em imagem de 1 bit comprimida.
-_ImagemPagina _codificarPagina(
-  Uint8List bgra,
-  int largura,
-  int altura,
-  int qualidade,
-  String modoCor,
-) {
-  final imagem = img.Image.fromBytes(
-    width: largura,
-    height: altura,
-    bytes: bgra.buffer,
-    order: img.ChannelOrder.bgra,
-  );
-
-  switch (modoCor) {
-    case 'mono':
-      final dados = _empacotarUmBit(imagem);
-      return _ImagemPagina(
-        dados: dados,
-        largura: largura,
-        altura: altura,
-        filtro: 'FlateDecode',
-        espacoCor: 'DeviceGray',
-        bits: 1,
-      );
-    case 'cinza':
-      img.grayscale(imagem);
-      final jpeg = img.encodeJpg(imagem, quality: qualidade.clamp(1, 100));
-      return _ImagemPagina(
-        dados: Uint8List.fromList(jpeg),
-        largura: largura,
-        altura: altura,
-        filtro: 'DCTDecode',
-        espacoCor: 'DeviceGray',
-        bits: 8,
-      );
-    default:
-      final jpeg = img.encodeJpg(imagem, quality: qualidade.clamp(1, 100));
-      return _ImagemPagina(
-        dados: Uint8List.fromList(jpeg),
-        largura: largura,
-        altura: altura,
-        filtro: 'DCTDecode',
-        espacoCor: 'DeviceRGB',
-        bits: 8,
-      );
-  }
-}
-
-/// Limiar de luminância + empacotamento em 1 bit por pixel (linhas alinhadas
-/// em byte), que é o formato que o PDF espera em /BitsPerComponent 1.
-Uint8List _empacotarUmBit(img.Image imagem) {
-  final largura = imagem.width;
-  final altura = imagem.height;
-  final bytesPorLinha = (largura + 7) ~/ 8;
-  final dados = Uint8List(bytesPorLinha * altura);
-
-  for (var y = 0; y < altura; y++) {
-    var indiceByte = y * bytesPorLinha;
-    var mascara = 0x80;
-    for (var x = 0; x < largura; x++) {
-      final pixel = imagem.getPixel(x, y);
-      final luminancia = 0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b;
-      // 0 = preto, 1 = branco (DeviceGray com 1 bit).
-      if (luminancia >= 160) dados[indiceByte] |= mascara;
-      mascara >>= 1;
-      if (mascara == 0) {
-        mascara = 0x80;
-        indiceByte++;
-      }
-    }
-  }
-  return dados;
-}
-
-/// Monta um PDF com uma página por imagem.
-Uint8List _montarPdf(
-  List<_ImagemPagina> imagens,
-  List<_TamanhoPagina> tamanhos,
-) {
-  final escritor = PdfWriter(versao: '1.7');
-  final refPaginas = escritor.reservar();
-  final refs = <PdfRef>[];
-
-  for (var i = 0; i < imagens.length; i++) {
-    final imagem = imagens[i];
-    final tamanho = i < tamanhos.length
-        ? tamanhos[i]
-        : _TamanhoPagina(
-            largura: imagem.largura * 72 / 150,
-            altura: imagem.altura * 72 / 150,
-          );
-
-    final refImagem = escritor.adicionar(
-      PdfStream(
-        PdfDict({
-          'Type': PdfName('XObject'),
-          'Subtype': PdfName('Image'),
-          'Width': PdfNumber(imagem.largura),
-          'Height': PdfNumber(imagem.altura),
-          'ColorSpace': PdfName(imagem.espacoCor),
-          'BitsPerComponent': PdfNumber(imagem.bits),
-          'Filter': PdfName(imagem.filtro),
-        }),
-        imagem.dados,
-      ),
-    );
-
-    final conteudo = PdfStream(
-      const PdfDict(),
-      Uint8List.fromList(
-        _montarConteudo(
-          tamanho.largura,
-          tamanho.altura,
-          imagem.largura,
-          imagem.altura,
-        ).codeUnits,
-      ),
-    );
-    final refConteudo = escritor.adicionar(conteudo);
-
-    final refPagina = escritor.adicionar(
-      PdfDict({
-        'Type': PdfName.page,
-        'Parent': refPaginas,
-        'MediaBox': PdfArray([
-          const PdfNumber(0),
-          const PdfNumber(0),
-          PdfNumber(tamanho.largura),
-          PdfNumber(tamanho.altura),
-        ]),
-        'Resources': PdfDict({
-          'XObject': PdfDict({'Im0': refImagem}),
-        }),
-        'Contents': refConteudo,
-      }),
-    );
-    refs.add(refPagina);
-  }
-
-  escritor.definirRef(
-    refPaginas,
-    PdfDict({
-      'Type': PdfName.pages,
-      'Kids': PdfArray(refs),
-      'Count': PdfNumber(refs.length),
-    }),
-  );
-
-  escritor.raiz = escritor.adicionar(
-    PdfDict({'Type': PdfName.catalog, 'Pages': refPaginas}),
-  );
-
-  return escritor.escrever();
-}
-
-/// Desenha a imagem ocupando a página inteira.
-String _montarConteudo(
-  double larguraPagina,
-  double alturaPagina,
-  int larguraImagem,
-  int alturaImagem,
-) {
-  final escala = math.min(
-    larguraPagina / larguraImagem,
-    alturaPagina / alturaImagem,
-  );
-  final largura = larguraImagem * escala;
-  final altura = alturaImagem * escala;
-  final x = (larguraPagina - largura) / 2;
-  final y = (alturaPagina - altura) / 2;
-
-  return 'q\n'
-      '${_numero(largura)} 0 0 ${_numero(altura)} ${_numero(x)} ${_numero(y)} cm\n'
-      '/Im0 Do\n'
-      'Q\n';
-}
-
-String _numero(double valor) => valor.toStringAsFixed(3);

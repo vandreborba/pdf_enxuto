@@ -80,7 +80,9 @@ class ServicoHistorico extends ChangeNotifier {
   int get totalBytesEntrada {
     var total = 0;
     for (final entrada in _entradas) {
-      if (entrada.kind == TaskKind.planilha) continue;
+      if (entrada.kind == TaskKind.planilha || entrada.kind == TaskKind.ocr) {
+        continue;
+      }
       total += entrada.resultado.bytesAntes;
     }
     return total;
@@ -93,12 +95,13 @@ class ServicoHistorico extends ChangeNotifier {
   }
 
   /// Arquivos que o app criou a partir de um PDF: partes da divisão e
-  /// planilhas da conversão.
+  /// planilhas da conversão e PDFs pesquisáveis do reconhecimento de texto.
   int get arquivosGerados {
     var total = 0;
     for (final entrada in _entradas) {
       if (entrada.kind == TaskKind.dividir ||
-          entrada.kind == TaskKind.planilha) {
+          entrada.kind == TaskKind.planilha ||
+          entrada.kind == TaskKind.ocr) {
         total += entrada.resultado.saidas.length;
       }
     }

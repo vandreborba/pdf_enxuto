@@ -23,6 +23,7 @@ import 'package:pdf_enxuto/screens/pagina_comprimir.dart';
 import 'package:pdf_enxuto/screens/pagina_config.dart';
 import 'package:pdf_enxuto/screens/pagina_dividir.dart';
 import 'package:pdf_enxuto/screens/pagina_historico.dart';
+import 'package:pdf_enxuto/screens/pagina_ocr.dart';
 import 'package:pdf_enxuto/screens/pagina_planilha.dart';
 
 /// As telas do app.
@@ -30,6 +31,7 @@ enum SecaoApp {
   comprimir(S.navComprimir, Icons.compress_rounded),
   dividir(S.navDividir, Icons.call_split_rounded),
   planilha(S.navPlanilha, Icons.table_chart_outlined),
+  ocr(S.navOcr, Icons.document_scanner_outlined),
   historico(S.navHistorico, Icons.history_rounded),
   configuracoes(S.navConfiguracoes, Icons.settings_rounded);
 
@@ -134,6 +136,8 @@ class _TelaPrincipalState extends State<TelaPrincipal> with WindowListener {
         const SingleActivator(LogicalKeyboardKey.digit3, control: true): () =>
             setState(() => _secao = SecaoApp.planilha),
         const SingleActivator(LogicalKeyboardKey.digit4, control: true): () =>
+            setState(() => _secao = SecaoApp.ocr),
+        const SingleActivator(LogicalKeyboardKey.digit5, control: true): () =>
             setState(() => _secao = SecaoApp.historico),
         const SingleActivator(LogicalKeyboardKey.comma, control: true): () =>
             setState(() => _secao = SecaoApp.configuracoes),
@@ -237,6 +241,7 @@ class _TelaPrincipalState extends State<TelaPrincipal> with WindowListener {
       SecaoApp.comprimir => PaginaComprimir(estado: estado),
       SecaoApp.dividir => PaginaDividir(estado: estado),
       SecaoApp.planilha => PaginaPlanilha(estado: estado),
+      SecaoApp.ocr => PaginaOcr(estado: estado),
       SecaoApp.historico => PaginaHistorico(estado: estado),
       SecaoApp.configuracoes => PaginaConfiguracoes(estado: estado),
     };
@@ -261,6 +266,8 @@ class _TelaPrincipalState extends State<TelaPrincipal> with WindowListener {
         await estado.dividirTudo();
       case SecaoApp.planilha:
         await estado.converterTudo();
+      case SecaoApp.ocr:
+        await estado.reconhecerTudo();
       case SecaoApp.comprimir:
       case SecaoApp.historico:
       case SecaoApp.configuracoes:
@@ -640,6 +647,7 @@ class _Cabecalho extends StatelessWidget {
       SecaoApp.comprimir => (S.comprimirTitulo, S.comprimirSubtitulo),
       SecaoApp.dividir => (S.dividirTitulo, S.dividirSubtitulo),
       SecaoApp.planilha => (S.planilhaTitulo, S.planilhaSubtitulo),
+      SecaoApp.ocr => (S.ocrTitulo, S.ocrSubtitulo),
       SecaoApp.historico => (S.historicoTitulo, S.historicoSubtitulo),
       SecaoApp.configuracoes => (S.configTitulo, S.configSubtitulo),
     };
@@ -666,7 +674,8 @@ class _Cabecalho extends StatelessWidget {
           ),
           if (secao == SecaoApp.comprimir ||
               secao == SecaoApp.dividir ||
-              secao == SecaoApp.planilha) ...[
+              secao == SecaoApp.planilha ||
+              secao == SecaoApp.ocr) ...[
             OutlinedButton.icon(
               onPressed: estado.processando ? null : onAbrir,
               icon: const Icon(Icons.add_rounded, size: 18),
@@ -685,6 +694,7 @@ class _Cabecalho extends StatelessWidget {
                 icone: switch (secao) {
                   SecaoApp.dividir => Icons.call_split_rounded,
                   SecaoApp.planilha => Icons.table_chart_outlined,
+                  SecaoApp.ocr => Icons.document_scanner_outlined,
                   _ => Icons.compress_rounded,
                 },
                 onPressed: estado.temAlgoParaProcessar ? onProcessar : null,
@@ -701,12 +711,14 @@ class _Cabecalho extends StatelessWidget {
       return switch (secao) {
         SecaoApp.dividir => S.dividirAgora,
         SecaoApp.planilha => S.planilhaAgora,
+        SecaoApp.ocr => S.ocrAgora,
         _ => S.comprimirAgora,
       };
     }
     final acao = switch (secao) {
       SecaoApp.dividir => 'Dividir',
       SecaoApp.planilha => 'Converter',
+      SecaoApp.ocr => 'Reconhecer',
       _ => 'Comprimir',
     };
     return '$acao $quantidade ${quantidade == 1 ? 'arquivo' : 'arquivos'}';

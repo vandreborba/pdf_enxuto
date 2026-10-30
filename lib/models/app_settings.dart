@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pdf_enxuto/models/compression_options.dart';
+import 'package:pdf_enxuto/models/ocr_options.dart';
 import 'package:pdf_enxuto/models/planilha_options.dart';
 import 'package:pdf_enxuto/models/task_models.dart';
 
@@ -22,6 +23,7 @@ class AppSettings {
     this.compressao = CompressionOptions.padrao,
     this.divisao = SplitOptions.padrao,
     this.planilha = OpcoesPlanilha.padrao,
+    this.ocr = OpcoesOcr.padrao,
     this.onboardingVisto = false,
   });
 
@@ -53,6 +55,7 @@ class AppSettings {
   final CompressionOptions compressao;
   final SplitOptions divisao;
   final OpcoesPlanilha planilha;
+  final OpcoesOcr ocr;
 
   final bool onboardingVisto;
 
@@ -77,6 +80,7 @@ class AppSettings {
     CompressionOptions? compressao,
     SplitOptions? divisao,
     OpcoesPlanilha? planilha,
+    OpcoesOcr? ocr,
     bool? onboardingVisto,
   }) {
     return AppSettings(
@@ -101,6 +105,7 @@ class AppSettings {
       compressao: compressao ?? this.compressao,
       divisao: divisao ?? this.divisao,
       planilha: planilha ?? this.planilha,
+      ocr: ocr ?? this.ocr,
       onboardingVisto: onboardingVisto ?? this.onboardingVisto,
     );
   }
@@ -122,6 +127,7 @@ class AppSettings {
     'compressao': compressao.toJson(),
     'divisao': divisao.toJson(),
     'planilha': planilha.toJson(),
+    'ocr': ocr.toJson(),
     'onboarding': onboardingVisto,
   };
 
@@ -129,6 +135,7 @@ class AppSettings {
     final comp = (json['compressao'] as Map?)?.cast<String, dynamic>() ?? {};
     final div = (json['divisao'] as Map?)?.cast<String, dynamic>() ?? {};
     final plan = (json['planilha'] as Map?)?.cast<String, dynamic>() ?? {};
+    final ocrJson = (json['ocr'] as Map?)?.cast<String, dynamic>() ?? {};
 
     return AppSettings(
       tema: ThemeMode.values.firstWhere(
@@ -156,6 +163,7 @@ class AppSettings {
       planilha: plan.isEmpty
           ? OpcoesPlanilha.padrao
           : OpcoesPlanilha.fromJson(plan),
+      ocr: ocrJson.isEmpty ? OpcoesOcr.padrao : OpcoesOcr.fromJson(ocrJson),
       onboardingVisto: json['onboarding'] as bool? ?? false,
     );
   }
